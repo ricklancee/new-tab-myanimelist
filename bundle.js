@@ -63,88 +63,426 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 7);
+/******/ 	return __webpack_require__(__webpack_require__.s = 44);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports) {
+
+module.exports = isWidget
+
+function isWidget(w) {
+    return w && w.type === "Widget"
+}
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var version = __webpack_require__(2)
+
+module.exports = isVirtualNode
+
+function isVirtualNode(x) {
+    return x && x.type === "VirtualNode" && x.version === version
+}
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports) {
+
+module.exports = "2"
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+module.exports = isThunk
+
+function isThunk(t) {
+    return t && t.type === "Thunk"
+}
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+module.exports = isHook
+
+function isHook(hook) {
+    return hook &&
+      (typeof hook.hook === "function" && !hook.hasOwnProperty("hook") ||
+       typeof hook.unhook === "function" && !hook.hasOwnProperty("unhook"))
+}
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var version = __webpack_require__(2)
+
+module.exports = isVirtualText
+
+function isVirtualText(x) {
+    return x && x.type === "VirtualText" && x.version === version
+}
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports) {
+
+var nativeIsArray = Array.isArray
+var toString = Object.prototype.toString
+
+module.exports = nativeIsArray || isArray
+
+function isArray(obj) {
+    return toString.call(obj) === "[object Array]"
+}
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {var topLevel = typeof global !== 'undefined' ? global :
+    typeof window !== 'undefined' ? window : {}
+var minDoc = __webpack_require__(43);
+
+if (typeof document !== 'undefined') {
+    module.exports = document;
+} else {
+    var doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'];
+
+    if (!doccy) {
+        doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'] = minDoc;
+    }
+
+    module.exports = doccy;
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function isObject(x) {
+	return typeof x === "object" && x !== null;
+};
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(8)
+var isHook = __webpack_require__(4)
+
+module.exports = applyProperties
+
+function applyProperties(node, props, previous) {
+    for (var propName in props) {
+        var propValue = props[propName]
+
+        if (propValue === undefined) {
+            removeProperty(node, propName, propValue, previous);
+        } else if (isHook(propValue)) {
+            removeProperty(node, propName, propValue, previous)
+            if (propValue.hook) {
+                propValue.hook(node,
+                    propName,
+                    previous ? previous[propName] : undefined)
+            }
+        } else {
+            if (isObject(propValue)) {
+                patchObject(node, props, previous, propName, propValue);
+            } else {
+                node[propName] = propValue
+            }
+        }
+    }
+}
+
+function removeProperty(node, propName, propValue, previous) {
+    if (previous) {
+        var previousValue = previous[propName]
+
+        if (!isHook(previousValue)) {
+            if (propName === "attributes") {
+                for (var attrName in previousValue) {
+                    node.removeAttribute(attrName)
+                }
+            } else if (propName === "style") {
+                for (var i in previousValue) {
+                    node.style[i] = ""
+                }
+            } else if (typeof previousValue === "string") {
+                node[propName] = ""
+            } else {
+                node[propName] = null
+            }
+        } else if (previousValue.unhook) {
+            previousValue.unhook(node, propName, propValue)
+        }
+    }
+}
+
+function patchObject(node, props, previous, propName, propValue) {
+    var previousValue = previous ? previous[propName] : undefined
+
+    // Set attributes
+    if (propName === "attributes") {
+        for (var attrName in propValue) {
+            var attrValue = propValue[attrName]
+
+            if (attrValue === undefined) {
+                node.removeAttribute(attrName)
+            } else {
+                node.setAttribute(attrName, attrValue)
+            }
+        }
+
+        return
+    }
+
+    if(previousValue && isObject(previousValue) &&
+        getPrototype(previousValue) !== getPrototype(propValue)) {
+        node[propName] = propValue
+        return
+    }
+
+    if (!isObject(node[propName])) {
+        node[propName] = {}
+    }
+
+    var replacer = propName === "style" ? "" : undefined
+
+    for (var k in propValue) {
+        var value = propValue[k]
+        node[propName][k] = (value === undefined) ? replacer : value
+    }
+}
+
+function getPrototype(value) {
+    if (Object.getPrototypeOf) {
+        return Object.getPrototypeOf(value)
+    } else if (value.__proto__) {
+        return value.__proto__
+    } else if (value.constructor) {
+        return value.constructor.prototype
+    }
+}
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var document = __webpack_require__(7)
+
+var applyProperties = __webpack_require__(9)
+
+var isVNode = __webpack_require__(1)
+var isVText = __webpack_require__(5)
+var isWidget = __webpack_require__(0)
+var handleThunk = __webpack_require__(11)
+
+module.exports = createElement
+
+function createElement(vnode, opts) {
+    var doc = opts ? opts.document || document : document
+    var warn = opts ? opts.warn : null
+
+    vnode = handleThunk(vnode).a
+
+    if (isWidget(vnode)) {
+        return vnode.init()
+    } else if (isVText(vnode)) {
+        return doc.createTextNode(vnode.text)
+    } else if (!isVNode(vnode)) {
+        if (warn) {
+            warn("Item is not a valid virtual dom node", vnode)
+        }
+        return null
+    }
+
+    var node = (vnode.namespace === null) ?
+        doc.createElement(vnode.tagName) :
+        doc.createElementNS(vnode.namespace, vnode.tagName)
+
+    var props = vnode.properties
+    applyProperties(node, props)
+
+    var children = vnode.children
+
+    for (var i = 0; i < children.length; i++) {
+        var childNode = createElement(children[i], opts)
+        if (childNode) {
+            node.appendChild(childNode)
+        }
+    }
+
+    return node
+}
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isVNode = __webpack_require__(1)
+var isVText = __webpack_require__(5)
+var isWidget = __webpack_require__(0)
+var isThunk = __webpack_require__(3)
+
+module.exports = handleThunk
+
+function handleThunk(a, b) {
+    var renderedA = a
+    var renderedB = b
+
+    if (isThunk(b)) {
+        renderedB = renderThunk(b, a)
+    }
+
+    if (isThunk(a)) {
+        renderedA = renderThunk(a, null)
+    }
+
+    return {
+        a: renderedA,
+        b: renderedB
+    }
+}
+
+function renderThunk(thunk, previous) {
+    var renderedThunk = thunk.vnode
+
+    if (!renderedThunk) {
+        renderedThunk = thunk.vnode = thunk.render(previous)
+    }
+
+    if (!(isVNode(renderedThunk) ||
+            isVText(renderedThunk) ||
+            isWidget(renderedThunk))) {
+        throw new Error("thunk did not return a valid node");
+    }
+
+    return renderedThunk
+}
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var version = __webpack_require__(2)
+
+VirtualPatch.NONE = 0
+VirtualPatch.VTEXT = 1
+VirtualPatch.VNODE = 2
+VirtualPatch.WIDGET = 3
+VirtualPatch.PROPS = 4
+VirtualPatch.ORDER = 5
+VirtualPatch.INSERT = 6
+VirtualPatch.REMOVE = 7
+VirtualPatch.THUNK = 8
+
+module.exports = VirtualPatch
+
+function VirtualPatch(type, vNode, patch) {
+    this.type = Number(type)
+    this.vNode = vNode
+    this.patch = patch
+}
+
+VirtualPatch.prototype.version = version
+VirtualPatch.prototype.type = "VirtualPatch"
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_string_to_html__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__core__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mediator__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__list_data__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__core__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__providers_mal__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mediator__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_virtual_dom_h__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_virtual_dom_h___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_virtual_dom_h__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_virtual_dom_diff__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_virtual_dom_diff___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_virtual_dom_diff__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_virtual_dom_patch__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_virtual_dom_patch___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_virtual_dom_patch__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_virtual_dom_create_element__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_virtual_dom_create_element___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_virtual_dom_create_element__);
 /* harmony export (immutable) */ __webpack_exports__["a"] = shell;
 
 
 
 
-// import MALjs from './MALjs';
+// Providers
+
+
+// Utilities
+
+
+// Virtual domming
 
 
 
 
-const seasons = {
-  winter: new Date('2017-01-01')
-};
 
 const services = {
+  virtualDom: {
+    h: __WEBPACK_IMPORTED_MODULE_3_virtual_dom_h___default.a,
+    diff: __WEBPACK_IMPORTED_MODULE_4_virtual_dom_diff___default.a,
+    patch: __WEBPACK_IMPORTED_MODULE_5_virtual_dom_patch___default.a,
+    createElement: __WEBPACK_IMPORTED_MODULE_6_virtual_dom_create_element___default.a
+  },
   providers: {
-    mal: { // provider interface
-      authenticate: (username, password) => {
-        return Promise.resolve(true);
-      },
-      update: () => {
-        return Promise.resolve(true);
-      },
-      list: function() {
-        const data = __WEBPACK_IMPORTED_MODULE_3__list_data__["a" /* list */].map(anime => ({
-          id: parseInt(anime.series_animedb_id),
-          title: anime.series_title,
-          image: anime.series_image,
-          starts: anime.series_start,
-          ends: anime.series_end,
-          status: parseInt(anime.series_status),
-          currentEpisode: parseInt(anime.my_watched_episodes),
-          episodeCount: parseInt(anime.series_episodes) ? parseInt(anime.series_episodes) : null,
-        }));
-
-        const get = function() {
-          return Promise.resolve(data);
-        };
-
-        const isWatching = item => item.status === 1;
-        const inWinterSeason = item => (new Date(item.starts).getTime() > seasons.winter.getTime());
-
-        const currentSeason = async function () {
-          const list = await get();
-
-          return list
-            .filter(inWinterSeason)
-            .filter(isWatching)
-            .sort((a, b) => {
-                const dateA = new Date(a.starts);
-                const dateB = new Date(b.starts);
-
-                if (dateA.getTime() > dateB.getTime())
-                  return 1;
-
-                return -1;
-            });
-        };
-
-        return {
-          currentSeason,
-          get
-        };
-      }(),
-
-    }
+    mal: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__providers_mal__["a" /* default */])()
   },
   storage: localStorage,
-  toHtml: __WEBPACK_IMPORTED_MODULE_0_string_to_html__["a" /* default */],
-  bus: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__mediator__["a" /* default */])(),
+  bus: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__mediator__["a" /* default */])()
 };
 
 function shell(opts = { log: false }) {
@@ -168,19 +506,19 @@ function shell(opts = { log: false }) {
       return warn(...args);
   };
 
-  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__core__["a" /* default */])(services);
+  return __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__core__["a" /* default */])(services);
 };
 
 
 /***/ }),
-/* 1 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = actions;
 
 
-function actions(bus) {
+function actions(bus, provider) {
 
   bus.when('card:changed', (cardState) => {
     console.info('A card changed:', cardState);
@@ -188,20 +526,22 @@ function actions(bus) {
 
   bus.when('anime:currentEpisodeChanged', (data) => {
     console.info('Episode count changed:', data);
+    provider.updateEpisodeCount(data.id, data.currentEpisode);
   });
 };
 
 
 /***/ }),
-/* 2 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = card;
 
 
-function card({toHtml, bus}, refElement, anime) {
+function card({ virtualDom, bus }, refElement, anime) {
   let blockChangeEvent = false;
+  let tree, rootNode;
 
   const setState = function(newState) {
     return new Proxy(newState, {
@@ -214,34 +554,57 @@ function card({toHtml, bus}, refElement, anime) {
           if (!blockChangeEvent)
             bus.emit('card:changed', clone);
 
-          render();
+          update();
           return true;
         },
       });
   };
 
   const cardTemplate = function(anime) {
-    const template = `
-      <div class="card card--showTitleOnHover" data-id="${anime.id}">
-        <div class="card__title">
-          <p>${ anime.title }</p>
-        </div>
-        <figure class="card__image-container">
-          <img src="${anime.image}" alt="${anime.title}">
-        </figure>
-        <div class="card__controls">
-          <button class="card__episode-button" data-ref="decrement">-</button>
-          <div class="card__episode-count">
-            <div>
-              <span>Episodes seen:</span>
-              <span>${anime.currentEpisode}/${anime.episodeCount ? anime.episodeCount : '??'}</span>
-            </div>
-          </div>
-          <button class="card__episode-button" data-ref="increment">+</button>
-        </div>
-      </div>`;
-
-    return toHtml(template);
+    return virtualDom.h("div.card.card--showTitleOnHover.isStatus-"+anime.status, {
+      "attributes": {
+        "data-id": anime.id
+      }
+    }, [
+        virtualDom.h("div.card__title", [
+          virtualDom.h("p", anime.title)
+        ]),
+        virtualDom.h("figure.card__image-container", [
+          virtualDom.h("a.card__link", {attributes: {target: '_blank', href: 'https://myanimelist.net/anime/'+anime.id}}, [
+            virtualDom.h("img", {
+              "attributes": {
+                "src": anime.image,
+                "alt": anime.title
+              }
+            })
+          ])
+        ]),
+        virtualDom.h("div.card__controls", [
+          virtualDom.h("button.card__episode-button", {
+            "attributes": {
+              "data-ref": "decrement",
+              "className": "card__episode-button"
+            }
+          }, `-`),
+          virtualDom.h("div.card__episode-count", [
+            virtualDom.h("div", [
+              virtualDom.h("input.episode-count__input", {attributes: {
+                type: 'number',
+                value: anime.currentEpisode,
+                "data-ref": "input",
+              }}),
+              virtualDom.h("span.episode-count__title", `Episodes seen:`),
+              virtualDom.h("span.episode-count__episodes", anime.currentEpisode+`/`+(anime.episodeCount ? anime.episodeCount : '??'))
+            ])
+          ]),
+          virtualDom.h("button.card__episode-button", {
+            "attributes": {
+              "data-ref": "increment",
+              "className": "card__episode-button"
+            }
+          }, `+`)
+        ])
+    ]);
   };
 
   const incrementEpisode = function() {
@@ -249,6 +612,9 @@ function card({toHtml, bus}, refElement, anime) {
       return;
 
     state.currentEpisode = state.currentEpisode + 1;
+
+    rootNode.querySelector('[data-ref="input"]').value = state.currentEpisode;
+
     bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
   };
 
@@ -257,24 +623,34 @@ function card({toHtml, bus}, refElement, anime) {
       return;
 
     state.currentEpisode = state.currentEpisode - 1;
+
+    rootNode.querySelector('[data-ref="input"]').value = state.currentEpisode;
+
+    bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
+  };
+
+  const changeEpisode = function(event) {
+    console.log(event.target.value);
+    state.currentEpisode = parseInt(event.target.value);
     bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
   };
 
   const render = function() {
-    // This rerenders the entire node, which might have
-    // an impact on performance.
-    const node = cardTemplate(state);
+    tree = cardTemplate(state);
+    rootNode = virtualDom.createElement(tree);
+    refElement.appendChild(rootNode);
 
-    // Add Event Listeners
-    node.querySelector('[data-ref="increment"]').addEventListener('click', incrementEpisode);
-    node.querySelector('[data-ref="decrement"]').addEventListener('click', decrementEpisode);
+    // Event listeners
+    rootNode.querySelector('[data-ref="increment"]').addEventListener('click', incrementEpisode);
+    rootNode.querySelector('[data-ref="decrement"]').addEventListener('click', decrementEpisode);
+    rootNode.querySelector('[data-ref="input"]').addEventListener('change', changeEpisode);
+  };
 
-    // Add to the dom, replace it if it already exists.
-    if (refElement.firstElementChild) {
-      refElement.replaceChild(node, refElement.firstElementChild);
-    } else {
-      refElement.appendChild(node);
-    }
+  const update = function() {
+    const newTree = cardTemplate(state);
+    const patches = virtualDom.diff(tree, newTree);
+    rootNode = virtualDom.patch(rootNode, patches);
+    tree = newTree;
   };
 
   const state = setState(anime);
@@ -296,13 +672,227 @@ function card({toHtml, bus}, refElement, anime) {
 
 
 /***/ }),
-/* 3 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__card__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__actions__ = __webpack_require__(1);
+/* harmony export (immutable) */ __webpack_exports__["a"] = cardContainer;
+
+
+function cardContainer(services, card, refElement, list) {
+  let nodes = [];
+  let state = list;
+  let loaded = 0;
+  const loadLimit = 32;
+  let containerHeight = 0;
+  let windowHeight = window.innerHeight;
+
+  // Event Listeners
+  const handleLoadingOfNextStateOnScroll = function(event) {
+    if (loaded >= state.length) {
+      return;
+    }
+
+    const distance = containerHeight - (window.scrollY + windowHeight);
+
+    if (distance < containerHeight / 2) {
+      renderNextStatePartial();
+    }
+  };
+  window.addEventListener('scroll', handleLoadingOfNextStateOnScroll, { passive: true });
+  window.addEventListener('resize', () => { windowHeight = window.innerHeight }, { passive: true });
+
+  const seasons = {
+    winter: 0, // Jan starts at 0
+    spring: 3,
+    summer: 6,
+    fall: 9
+  };
+
+  // 1/watching, 2/completed, 3/onhold, 4/dropped, 6/plantowatch
+  const watching = item => item.status === 1;
+  const completed = item => item.status === 2;
+  const onHold = item => item.status === 3;
+  const dropped = item => item.status === 4;
+  const planToWatch = item => item.status === 6;
+
+  const winterSeason = item => (new Date(item.starts)).getMonth() == seasons.winter;
+  const springSeason = item => (new Date(item.starts)).getMonth() == seasons.spring;
+  const summerSeason = item => (new Date(item.starts)).getMonth() == seasons.summer;
+  const fallSeason = item => (new Date(item.starts)).getMonth() == seasons.fall;
+
+  const filter = function(status = 'watching', season = 'all', year = 'all') {
+    let filtered = list.slice(0);
+
+    switch(status) {
+      case 'watching':
+        filtered = filtered.filter(watching);
+        break;
+      case 'completed':
+        filtered = filtered.filter(completed);
+        break;
+      case 'onhold':
+        filtered = filtered.filter(onHold);
+        break;
+      case 'dropped':
+        filtered = filtered.filter(dropped);
+        break;
+      case 'plantowatch':
+        filtered = filtered.filter(planToWatch);
+        break;
+      case 'all':
+        filtered = filtered;
+        break;
+      default:
+        throw new Error(`Unrecognized filter "${status}"`);
+    }
+
+    switch(season) {
+      case 'winter':
+        filtered = filtered.filter(winterSeason);
+        break;
+      case 'spring':
+        filtered = filtered.filter(springSeason);
+        break;
+      case 'summer':
+        filtered = filtered.filter(summerSeason);
+        break;
+      case 'fall':
+        filtered = filtered.filter(fallSeason);
+        break;
+      case 'all':
+        filtered = filtered;
+        break;
+      default:
+        throw new Error(`Unrecognized filter "${season}"`);
+    }
+
+    if (year !== 'all') {
+      year = parseInt(year, 10);
+      filtered = filtered.filter(item => ( new Date(item.starts)).getFullYear() === year);
+    }
+
+    return state = filtered;
+  };
+
+  const sort = function() {
+    const sortedByStatus = state.slice().sort((a, b) => {
+      if (a.status > b.status) {
+        return 1;
+      }
+
+      if (a.status < b.status) {
+        return -1;
+      }
+
+      if (a.status === b.status) {
+        return 0;
+      }
+    });
+
+    const grouped = {};
+    sortedByStatus.forEach(item => {
+      if (!grouped[item.status]) {
+        grouped[item.status] = [];
+      }
+
+      grouped[item.status].push(item);
+    });
+
+    let sorted = [];
+    for (let prop in grouped) {
+      grouped[prop].sort((a, b) => {
+        const dateA = new Date(a.starts);
+        const dateB = new Date(b.starts);
+
+        if (dateA.getTime() < dateB.getTime())
+          return 1;
+
+        return -1;
+      });
+
+      sorted = sorted.concat(grouped[prop]);
+    }
+
+    state = sorted;
+  };
+
+  const render = function() {
+    // If there are any remove all nodes from dom first
+    if (nodes.length) {
+      nodes.forEach(node => node.remove());
+    }
+
+    // Clear the array
+    nodes = [];
+    // Eeset amount of loaded cards
+    loaded = 0;
+
+    if (!state.length) {
+      refElement.classList.add('isEmpty');
+      console.warn('! nothing found... show empty state!');
+      return;
+    }
+    refElement.classList.remove('isEmpty');
+
+    const stateToLoad = getStateToLoad();
+    renderCardsToRefElement(stateToLoad);
+    reCalcContainerHeight();
+  };
+
+  const renderNextStatePartial = function() {
+    if (loaded >= state.length) {
+      console.info('Completely rendered state to DOM.');
+      return;
+    }
+
+    const stateToLoad = getStateToLoad();
+    renderCardsToRefElement(stateToLoad);
+    reCalcContainerHeight();
+  };
+
+  const renderCardsToRefElement = function(data) {
+    data.forEach(anime => {
+      const node = document.createElement('li');
+      const animeCard = card(services, node, anime);
+      animeCard.render();
+      nodes.push(node);
+    });
+
+    // Append all nodes to dom after creating the nodes
+    // this prevents a read, write, read, write cycle
+    nodes.forEach(node => refElement.appendChild(node));
+  };
+
+  const getStateToLoad = function() {
+    const slicedState = state.slice(loaded, loaded + loadLimit);
+    loaded = loaded + loadLimit;
+    return slicedState;
+  };
+
+  const reCalcContainerHeight = function() {
+    containerHeight = refElement.offsetTop + refElement.offsetHeight;
+  };
+
+  return {
+    sort,
+    filter,
+    render,
+    renderNextStatePartial
+  };
+};
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__card__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cardContainer__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__actions__ = __webpack_require__(15);
 /* harmony export (immutable) */ __webpack_exports__["a"] = core;
+
 
 
 
@@ -311,12 +901,16 @@ function card({toHtml, bus}, refElement, anime) {
 async function core(services) {
   console.info('initialize with ', services);
 
+  const provider = services.providers.mal;
+
   // Bootstrap the application
   console.info('initialize app...');
-  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__actions__["a" /* default */])(services.bus);
+  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__actions__["a" /* default */])(services.bus, provider);
 
   console.info('Get settings from storage...');
   const settings = services.storage.getItem('app.settings');
+  const user = services.storage.getItem('app.user');
+  const cachedList = services.storage.getItem('app.list');
 
   let prompt = false;
   if (!settings || !settings.loggedIn) {
@@ -324,27 +918,84 @@ async function core(services) {
     prompt = true;
   }
 
-  const watching = await services.providers.mal.list.currentSeason();
+  let list;
 
-  console.log(watching);
+  if (cachedList) {
+    console.info('Using cached list.');
+    list = JSON.parse(cachedList);
+  }
 
-  const cardContainer = document.querySelector(".card-container");
+  let status = 'watching';
+  let season = 'all';
+  let year = 'all';
 
-  const nodes = [];
-  watching.forEach(anime => {
-    const node = document.createElement('li');
+  // Container event handlers.
+  const containerEl = document.querySelector(".card-container");
+  const container = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__cardContainer__["a" /* default */])(services, __WEBPACK_IMPORTED_MODULE_0__card__["a" /* default */], containerEl, list);
 
-    const animeCard = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__card__["a" /* default */])(services, node, anime);
+  const filterStatusElements = document.querySelectorAll('[data-filter-status]');
+  const filterCurrentSeason = document.querySelector('[data-filter-season="current"]');
+  const filterAllSeasons = document.querySelector('[data-filter-season="all"]');
 
-    animeCard.render();
+  document.querySelector('[data-filter-status="'+ status +'"]').classList.add('active');
+  filterAllSeasons.classList.add('active');
 
-    nodes.push(node);
 
-    return false;
-  });
+  const handleFilterCurrentSeasonClick = function(event) {
+    filterAllSeasons.classList.remove('active');
+    event.target.classList.add('active');
 
-  // Append all nodes to dom
-  nodes.forEach(node => cardContainer.appendChild(node));
+    season = 'winter';
+    year = 2017;
+
+    container.filter(status, season, year);
+    container.sort();
+    container.render();
+  };
+
+  const handleFilterAllSeasonsClick = function(event) {
+    filterCurrentSeason.classList.remove('active');
+    event.target.classList.add('active');
+
+    season = 'all';
+    year = 'all';
+
+    container.filter(status, 'all', year);
+    container.sort();
+    container.render();
+  };
+
+  const handleFilterStatusClick = function(event) {
+    status = event.target.getAttribute('data-filter-status');
+
+    filterStatusElements.forEach(el => el.classList.remove('active'));
+    event.target.classList.add('active');
+
+    container.filter(status, season, year);
+    container.sort();
+    container.render();
+  };
+
+  filterStatusElements.forEach(el => el.addEventListener('click', handleFilterStatusClick));
+
+  filterCurrentSeason.addEventListener('click', handleFilterCurrentSeasonClick);
+  filterAllSeasons.addEventListener('click', handleFilterAllSeasonsClick);
+
+  if (cachedList) {
+    container.filter(status, season, year);
+    container.sort();
+    container.render();
+  }
+
+  window.container = container;
+
+  // services.providers.mal.list.get().then(data => {
+  //   console.info('Fetched list from provider.');
+  //   list = data;
+  //   services.storage.setItem('app.list', JSON.stringify(data));
+
+  //   // Re-render
+  // });
 
   // console.log('Checking if logged in...');
   // If not prompt log in -> store credentials if remember is on.
@@ -352,13 +1003,9 @@ async function core(services) {
   // Do background fetch to update -> show spinner for this ?.
 };
 
-{
-  currentEpisode: 3
-}
-
 
 /***/ }),
-/* 4 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3587,7 +4234,7 @@ const list =  [
          "series_status": "1",
          "series_start": "2017-01-08",
          "series_end": "0000-00-00",
-         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/83861.jpg",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/83933.jpg",
          "my_id": "0",
          "my_watched_episodes": "0",
          "my_start_date": "0000-00-00",
@@ -3773,7 +4420,7 @@ const list =  [
 
 
 /***/ }),
-/* 5 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3885,28 +4532,1800 @@ const mediator = function mediator() {
 
 
 /***/ }),
-/* 6 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/* 21 */
+/***/ (function(module, exports) {
+
+/*!
+ * Cross-Browser Split 1.1.1
+ * Copyright 2007-2012 Steven Levithan <stevenlevithan.com>
+ * Available under the MIT License
+ * ECMAScript compliant, uniform cross-browser split method
+ */
+
+/**
+ * Splits a string into an array of strings using a regex or string separator. Matches of the
+ * separator are not included in the result array. However, if `separator` is a regex that contains
+ * capturing groups, backreferences are spliced into the result each time `separator` is matched.
+ * Fixes browser bugs compared to the native `String.prototype.split` and can be used reliably
+ * cross-browser.
+ * @param {String} str String to split.
+ * @param {RegExp|String} separator Regex or string to use for separating the string.
+ * @param {Number} [limit] Maximum number of items to include in the result array.
+ * @returns {Array} Array of substrings.
+ * @example
+ *
+ * // Basic use
+ * split('a b c d', ' ');
+ * // -> ['a', 'b', 'c', 'd']
+ *
+ * // With limit
+ * split('a b c d', ' ', 2);
+ * // -> ['a', 'b']
+ *
+ * // Backreferences in result array
+ * split('..word1 word2..', /([a-z]+)(\d+)/i);
+ * // -> ['..', 'word', '1', ' ', 'word', '2', '..']
+ */
+module.exports = (function split(undef) {
+
+  var nativeSplit = String.prototype.split,
+    compliantExecNpcg = /()??/.exec("")[1] === undef,
+    // NPCG: nonparticipating capturing group
+    self;
+
+  self = function(str, separator, limit) {
+    // If `separator` is not a regex, use `nativeSplit`
+    if (Object.prototype.toString.call(separator) !== "[object RegExp]") {
+      return nativeSplit.call(str, separator, limit);
+    }
+    var output = [],
+      flags = (separator.ignoreCase ? "i" : "") + (separator.multiline ? "m" : "") + (separator.extended ? "x" : "") + // Proposed for ES6
+      (separator.sticky ? "y" : ""),
+      // Firefox 3+
+      lastLastIndex = 0,
+      // Make `global` and avoid `lastIndex` issues by working with a copy
+      separator = new RegExp(separator.source, flags + "g"),
+      separator2, match, lastIndex, lastLength;
+    str += ""; // Type-convert
+    if (!compliantExecNpcg) {
+      // Doesn't need flags gy, but they don't hurt
+      separator2 = new RegExp("^" + separator.source + "$(?!\\s)", flags);
+    }
+    /* Values for `limit`, per the spec:
+     * If undefined: 4294967295 // Math.pow(2, 32) - 1
+     * If 0, Infinity, or NaN: 0
+     * If positive number: limit = Math.floor(limit); if (limit > 4294967295) limit -= 4294967296;
+     * If negative number: 4294967296 - Math.floor(Math.abs(limit))
+     * If other: Type-convert, then use the above rules
+     */
+    limit = limit === undef ? -1 >>> 0 : // Math.pow(2, 32) - 1
+    limit >>> 0; // ToUint32(limit)
+    while (match = separator.exec(str)) {
+      // `separator.lastIndex` is not reliable cross-browser
+      lastIndex = match.index + match[0].length;
+      if (lastIndex > lastLastIndex) {
+        output.push(str.slice(lastLastIndex, match.index));
+        // Fix browsers whose `exec` methods don't consistently return `undefined` for
+        // nonparticipating capturing groups
+        if (!compliantExecNpcg && match.length > 1) {
+          match[0].replace(separator2, function() {
+            for (var i = 1; i < arguments.length - 2; i++) {
+              if (arguments[i] === undef) {
+                match[i] = undef;
+              }
+            }
+          });
+        }
+        if (match.length > 1 && match.index < str.length) {
+          Array.prototype.push.apply(output, match.slice(1));
+        }
+        lastLength = match[0].length;
+        lastLastIndex = lastIndex;
+        if (output.length >= limit) {
+          break;
+        }
+      }
+      if (separator.lastIndex === match.index) {
+        separator.lastIndex++; // Avoid an infinite loop
+      }
+    }
+    if (lastLastIndex === str.length) {
+      if (lastLength || !separator.test("")) {
+        output.push("");
+      }
+    } else {
+      output.push(str.slice(lastLastIndex));
+    }
+    return output.length > limit ? output.slice(0, limit) : output;
+  };
+
+  return self;
+})();
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = toHtml;
 
 
-const contextRange = document.createRange();
-contextRange.setStart(document.body, 0);
+var OneVersionConstraint = __webpack_require__(24);
 
-function toHtml(string) {
-  return contextRange.createContextualFragment(string);
+var MY_VERSION = '7';
+OneVersionConstraint('ev-store', MY_VERSION);
+
+var hashKey = '__EV_STORE_KEY@' + MY_VERSION;
+
+module.exports = EvStore;
+
+function EvStore(elem) {
+    var hash = elem[hashKey];
+
+    if (!hash) {
+        hash = elem[hashKey] = {};
+    }
+
+    return hash;
+}
+
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(global) {
+
+/*global window, global*/
+
+var root = typeof window !== 'undefined' ?
+    window : typeof global !== 'undefined' ?
+    global : {};
+
+module.exports = Individual;
+
+function Individual(key, value) {
+    if (key in root) {
+        return root[key];
+    }
+
+    root[key] = value;
+
+    return value;
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Individual = __webpack_require__(23);
+
+module.exports = OneVersion;
+
+function OneVersion(moduleName, version, defaultValue) {
+    var key = '__INDIVIDUAL_ONE_VERSION_' + moduleName;
+    var enforceKey = key + '_ENFORCE_SINGLETON';
+
+    var versionValue = Individual(enforceKey, version);
+
+    if (versionValue !== version) {
+        throw new Error('Can only have one copy of ' +
+            moduleName + '.\n' +
+            'You already have version ' + versionValue +
+            ' installed.\n' +
+            'This means you cannot install version ' + version);
+    }
+
+    return Individual(key, defaultValue);
+}
+
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var createElement = __webpack_require__(10)
+
+module.exports = createElement
+
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var diff = __webpack_require__(40)
+
+module.exports = diff
+
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var h = __webpack_require__(35)
+
+module.exports = h
+
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var patch = __webpack_require__(31)
+
+module.exports = patch
+
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports) {
+
+// Maps a virtual DOM tree onto a real DOM tree in an efficient manner.
+// We don't want to read all of the DOM nodes in the tree so we use
+// the in-order tree indexing to eliminate recursion down certain branches.
+// We only recurse into a DOM node if we know that it contains a child of
+// interest.
+
+var noChild = {}
+
+module.exports = domIndex
+
+function domIndex(rootNode, tree, indices, nodes) {
+    if (!indices || indices.length === 0) {
+        return {}
+    } else {
+        indices.sort(ascending)
+        return recurse(rootNode, tree, indices, nodes, 0)
+    }
+}
+
+function recurse(rootNode, tree, indices, nodes, rootIndex) {
+    nodes = nodes || {}
+
+
+    if (rootNode) {
+        if (indexInRange(indices, rootIndex, rootIndex)) {
+            nodes[rootIndex] = rootNode
+        }
+
+        var vChildren = tree.children
+
+        if (vChildren) {
+
+            var childNodes = rootNode.childNodes
+
+            for (var i = 0; i < tree.children.length; i++) {
+                rootIndex += 1
+
+                var vChild = vChildren[i] || noChild
+                var nextIndex = rootIndex + (vChild.count || 0)
+
+                // skip recursion down the tree if there are no nodes down here
+                if (indexInRange(indices, rootIndex, nextIndex)) {
+                    recurse(childNodes[i], vChild, indices, nodes, rootIndex)
+                }
+
+                rootIndex = nextIndex
+            }
+        }
+    }
+
+    return nodes
+}
+
+// Binary search for an index in the interval [left, right]
+function indexInRange(indices, left, right) {
+    if (indices.length === 0) {
+        return false
+    }
+
+    var minIndex = 0
+    var maxIndex = indices.length - 1
+    var currentIndex
+    var currentItem
+
+    while (minIndex <= maxIndex) {
+        currentIndex = ((maxIndex + minIndex) / 2) >> 0
+        currentItem = indices[currentIndex]
+
+        if (minIndex === maxIndex) {
+            return currentItem >= left && currentItem <= right
+        } else if (currentItem < left) {
+            minIndex = currentIndex + 1
+        } else  if (currentItem > right) {
+            maxIndex = currentIndex - 1
+        } else {
+            return true
+        }
+    }
+
+    return false;
+}
+
+function ascending(a, b) {
+    return a > b ? 1 : -1
+}
+
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var applyProperties = __webpack_require__(9)
+
+var isWidget = __webpack_require__(0)
+var VPatch = __webpack_require__(12)
+
+var updateWidget = __webpack_require__(32)
+
+module.exports = applyPatch
+
+function applyPatch(vpatch, domNode, renderOptions) {
+    var type = vpatch.type
+    var vNode = vpatch.vNode
+    var patch = vpatch.patch
+
+    switch (type) {
+        case VPatch.REMOVE:
+            return removeNode(domNode, vNode)
+        case VPatch.INSERT:
+            return insertNode(domNode, patch, renderOptions)
+        case VPatch.VTEXT:
+            return stringPatch(domNode, vNode, patch, renderOptions)
+        case VPatch.WIDGET:
+            return widgetPatch(domNode, vNode, patch, renderOptions)
+        case VPatch.VNODE:
+            return vNodePatch(domNode, vNode, patch, renderOptions)
+        case VPatch.ORDER:
+            reorderChildren(domNode, patch)
+            return domNode
+        case VPatch.PROPS:
+            applyProperties(domNode, patch, vNode.properties)
+            return domNode
+        case VPatch.THUNK:
+            return replaceRoot(domNode,
+                renderOptions.patch(domNode, patch, renderOptions))
+        default:
+            return domNode
+    }
+}
+
+function removeNode(domNode, vNode) {
+    var parentNode = domNode.parentNode
+
+    if (parentNode) {
+        parentNode.removeChild(domNode)
+    }
+
+    destroyWidget(domNode, vNode);
+
+    return null
+}
+
+function insertNode(parentNode, vNode, renderOptions) {
+    var newNode = renderOptions.render(vNode, renderOptions)
+
+    if (parentNode) {
+        parentNode.appendChild(newNode)
+    }
+
+    return parentNode
+}
+
+function stringPatch(domNode, leftVNode, vText, renderOptions) {
+    var newNode
+
+    if (domNode.nodeType === 3) {
+        domNode.replaceData(0, domNode.length, vText.text)
+        newNode = domNode
+    } else {
+        var parentNode = domNode.parentNode
+        newNode = renderOptions.render(vText, renderOptions)
+
+        if (parentNode && newNode !== domNode) {
+            parentNode.replaceChild(newNode, domNode)
+        }
+    }
+
+    return newNode
+}
+
+function widgetPatch(domNode, leftVNode, widget, renderOptions) {
+    var updating = updateWidget(leftVNode, widget)
+    var newNode
+
+    if (updating) {
+        newNode = widget.update(leftVNode, domNode) || domNode
+    } else {
+        newNode = renderOptions.render(widget, renderOptions)
+    }
+
+    var parentNode = domNode.parentNode
+
+    if (parentNode && newNode !== domNode) {
+        parentNode.replaceChild(newNode, domNode)
+    }
+
+    if (!updating) {
+        destroyWidget(domNode, leftVNode)
+    }
+
+    return newNode
+}
+
+function vNodePatch(domNode, leftVNode, vNode, renderOptions) {
+    var parentNode = domNode.parentNode
+    var newNode = renderOptions.render(vNode, renderOptions)
+
+    if (parentNode && newNode !== domNode) {
+        parentNode.replaceChild(newNode, domNode)
+    }
+
+    return newNode
+}
+
+function destroyWidget(domNode, w) {
+    if (typeof w.destroy === "function" && isWidget(w)) {
+        w.destroy(domNode)
+    }
+}
+
+function reorderChildren(domNode, moves) {
+    var childNodes = domNode.childNodes
+    var keyMap = {}
+    var node
+    var remove
+    var insert
+
+    for (var i = 0; i < moves.removes.length; i++) {
+        remove = moves.removes[i]
+        node = childNodes[remove.from]
+        if (remove.key) {
+            keyMap[remove.key] = node
+        }
+        domNode.removeChild(node)
+    }
+
+    var length = childNodes.length
+    for (var j = 0; j < moves.inserts.length; j++) {
+        insert = moves.inserts[j]
+        node = keyMap[insert.key]
+        // this is the weirdest bug i've ever seen in webkit
+        domNode.insertBefore(node, insert.to >= length++ ? null : childNodes[insert.to])
+    }
+}
+
+function replaceRoot(oldRoot, newRoot) {
+    if (oldRoot && newRoot && oldRoot !== newRoot && oldRoot.parentNode) {
+        oldRoot.parentNode.replaceChild(newRoot, oldRoot)
+    }
+
+    return newRoot;
+}
+
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var document = __webpack_require__(7)
+var isArray = __webpack_require__(6)
+
+var render = __webpack_require__(10)
+var domIndex = __webpack_require__(29)
+var patchOp = __webpack_require__(30)
+module.exports = patch
+
+function patch(rootNode, patches, renderOptions) {
+    renderOptions = renderOptions || {}
+    renderOptions.patch = renderOptions.patch && renderOptions.patch !== patch
+        ? renderOptions.patch
+        : patchRecursive
+    renderOptions.render = renderOptions.render || render
+
+    return renderOptions.patch(rootNode, patches, renderOptions)
+}
+
+function patchRecursive(rootNode, patches, renderOptions) {
+    var indices = patchIndices(patches)
+
+    if (indices.length === 0) {
+        return rootNode
+    }
+
+    var index = domIndex(rootNode, patches.a, indices)
+    var ownerDocument = rootNode.ownerDocument
+
+    if (!renderOptions.document && ownerDocument !== document) {
+        renderOptions.document = ownerDocument
+    }
+
+    for (var i = 0; i < indices.length; i++) {
+        var nodeIndex = indices[i]
+        rootNode = applyPatch(rootNode,
+            index[nodeIndex],
+            patches[nodeIndex],
+            renderOptions)
+    }
+
+    return rootNode
+}
+
+function applyPatch(rootNode, domNode, patchList, renderOptions) {
+    if (!domNode) {
+        return rootNode
+    }
+
+    var newNode
+
+    if (isArray(patchList)) {
+        for (var i = 0; i < patchList.length; i++) {
+            newNode = patchOp(patchList[i], domNode, renderOptions)
+
+            if (domNode === rootNode) {
+                rootNode = newNode
+            }
+        }
+    } else {
+        newNode = patchOp(patchList, domNode, renderOptions)
+
+        if (domNode === rootNode) {
+            rootNode = newNode
+        }
+    }
+
+    return rootNode
+}
+
+function patchIndices(patches) {
+    var indices = []
+
+    for (var key in patches) {
+        if (key !== "a") {
+            indices.push(Number(key))
+        }
+    }
+
+    return indices
+}
+
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isWidget = __webpack_require__(0)
+
+module.exports = updateWidget
+
+function updateWidget(a, b) {
+    if (isWidget(a) && isWidget(b)) {
+        if ("name" in a && "name" in b) {
+            return a.id === b.id
+        } else {
+            return a.init === b.init
+        }
+    }
+
+    return false
+}
+
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var EvStore = __webpack_require__(22);
+
+module.exports = EvHook;
+
+function EvHook(value) {
+    if (!(this instanceof EvHook)) {
+        return new EvHook(value);
+    }
+
+    this.value = value;
+}
+
+EvHook.prototype.hook = function (node, propertyName) {
+    var es = EvStore(node);
+    var propName = propertyName.substr(3);
+
+    es[propName] = this.value;
+};
+
+EvHook.prototype.unhook = function(node, propertyName) {
+    var es = EvStore(node);
+    var propName = propertyName.substr(3);
+
+    es[propName] = undefined;
 };
 
 
 /***/ }),
-/* 7 */
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = SoftSetHook;
+
+function SoftSetHook(value) {
+    if (!(this instanceof SoftSetHook)) {
+        return new SoftSetHook(value);
+    }
+
+    this.value = value;
+}
+
+SoftSetHook.prototype.hook = function (node, propertyName) {
+    if (node[propertyName] !== this.value) {
+        node[propertyName] = this.value;
+    }
+};
+
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var isArray = __webpack_require__(6);
+
+var VNode = __webpack_require__(37);
+var VText = __webpack_require__(38);
+var isVNode = __webpack_require__(1);
+var isVText = __webpack_require__(5);
+var isWidget = __webpack_require__(0);
+var isHook = __webpack_require__(4);
+var isVThunk = __webpack_require__(3);
+
+var parseTag = __webpack_require__(36);
+var softSetHook = __webpack_require__(34);
+var evHook = __webpack_require__(33);
+
+module.exports = h;
+
+function h(tagName, properties, children) {
+    var childNodes = [];
+    var tag, props, key, namespace;
+
+    if (!children && isChildren(properties)) {
+        children = properties;
+        props = {};
+    }
+
+    props = props || properties || {};
+    tag = parseTag(tagName, props);
+
+    // support keys
+    if (props.hasOwnProperty('key')) {
+        key = props.key;
+        props.key = undefined;
+    }
+
+    // support namespace
+    if (props.hasOwnProperty('namespace')) {
+        namespace = props.namespace;
+        props.namespace = undefined;
+    }
+
+    // fix cursor bug
+    if (tag === 'INPUT' &&
+        !namespace &&
+        props.hasOwnProperty('value') &&
+        props.value !== undefined &&
+        !isHook(props.value)
+    ) {
+        props.value = softSetHook(props.value);
+    }
+
+    transformProperties(props);
+
+    if (children !== undefined && children !== null) {
+        addChild(children, childNodes, tag, props);
+    }
+
+
+    return new VNode(tag, props, childNodes, key, namespace);
+}
+
+function addChild(c, childNodes, tag, props) {
+    if (typeof c === 'string') {
+        childNodes.push(new VText(c));
+    } else if (typeof c === 'number') {
+        childNodes.push(new VText(String(c)));
+    } else if (isChild(c)) {
+        childNodes.push(c);
+    } else if (isArray(c)) {
+        for (var i = 0; i < c.length; i++) {
+            addChild(c[i], childNodes, tag, props);
+        }
+    } else if (c === null || c === undefined) {
+        return;
+    } else {
+        throw UnexpectedVirtualElement({
+            foreignObject: c,
+            parentVnode: {
+                tagName: tag,
+                properties: props
+            }
+        });
+    }
+}
+
+function transformProperties(props) {
+    for (var propName in props) {
+        if (props.hasOwnProperty(propName)) {
+            var value = props[propName];
+
+            if (isHook(value)) {
+                continue;
+            }
+
+            if (propName.substr(0, 3) === 'ev-') {
+                // add ev-foo support
+                props[propName] = evHook(value);
+            }
+        }
+    }
+}
+
+function isChild(x) {
+    return isVNode(x) || isVText(x) || isWidget(x) || isVThunk(x);
+}
+
+function isChildren(x) {
+    return typeof x === 'string' || isArray(x) || isChild(x);
+}
+
+function UnexpectedVirtualElement(data) {
+    var err = new Error();
+
+    err.type = 'virtual-hyperscript.unexpected.virtual-element';
+    err.message = 'Unexpected virtual child passed to h().\n' +
+        'Expected a VNode / Vthunk / VWidget / string but:\n' +
+        'got:\n' +
+        errorString(data.foreignObject) +
+        '.\n' +
+        'The parent vnode is:\n' +
+        errorString(data.parentVnode)
+        '\n' +
+        'Suggested fix: change your `h(..., [ ... ])` callsite.';
+    err.foreignObject = data.foreignObject;
+    err.parentVnode = data.parentVnode;
+
+    return err;
+}
+
+function errorString(obj) {
+    try {
+        return JSON.stringify(obj, null, '    ');
+    } catch (e) {
+        return String(obj);
+    }
+}
+
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var split = __webpack_require__(21);
+
+var classIdSplit = /([\.#]?[a-zA-Z0-9\u007F-\uFFFF_:-]+)/;
+var notClassId = /^\.|#/;
+
+module.exports = parseTag;
+
+function parseTag(tag, props) {
+    if (!tag) {
+        return 'DIV';
+    }
+
+    var noId = !(props.hasOwnProperty('id'));
+
+    var tagParts = split(tag, classIdSplit);
+    var tagName = null;
+
+    if (notClassId.test(tagParts[1])) {
+        tagName = 'DIV';
+    }
+
+    var classes, part, type, i;
+
+    for (i = 0; i < tagParts.length; i++) {
+        part = tagParts[i];
+
+        if (!part) {
+            continue;
+        }
+
+        type = part.charAt(0);
+
+        if (!tagName) {
+            tagName = part;
+        } else if (type === '.') {
+            classes = classes || [];
+            classes.push(part.substring(1, part.length));
+        } else if (type === '#' && noId) {
+            props.id = part.substring(1, part.length);
+        }
+    }
+
+    if (classes) {
+        if (props.className) {
+            classes.push(props.className);
+        }
+
+        props.className = classes.join(' ');
+    }
+
+    return props.namespace ? tagName : tagName.toUpperCase();
+}
+
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var version = __webpack_require__(2)
+var isVNode = __webpack_require__(1)
+var isWidget = __webpack_require__(0)
+var isThunk = __webpack_require__(3)
+var isVHook = __webpack_require__(4)
+
+module.exports = VirtualNode
+
+var noProperties = {}
+var noChildren = []
+
+function VirtualNode(tagName, properties, children, key, namespace) {
+    this.tagName = tagName
+    this.properties = properties || noProperties
+    this.children = children || noChildren
+    this.key = key != null ? String(key) : undefined
+    this.namespace = (typeof namespace === "string") ? namespace : null
+
+    var count = (children && children.length) || 0
+    var descendants = 0
+    var hasWidgets = false
+    var hasThunks = false
+    var descendantHooks = false
+    var hooks
+
+    for (var propName in properties) {
+        if (properties.hasOwnProperty(propName)) {
+            var property = properties[propName]
+            if (isVHook(property) && property.unhook) {
+                if (!hooks) {
+                    hooks = {}
+                }
+
+                hooks[propName] = property
+            }
+        }
+    }
+
+    for (var i = 0; i < count; i++) {
+        var child = children[i]
+        if (isVNode(child)) {
+            descendants += child.count || 0
+
+            if (!hasWidgets && child.hasWidgets) {
+                hasWidgets = true
+            }
+
+            if (!hasThunks && child.hasThunks) {
+                hasThunks = true
+            }
+
+            if (!descendantHooks && (child.hooks || child.descendantHooks)) {
+                descendantHooks = true
+            }
+        } else if (!hasWidgets && isWidget(child)) {
+            if (typeof child.destroy === "function") {
+                hasWidgets = true
+            }
+        } else if (!hasThunks && isThunk(child)) {
+            hasThunks = true;
+        }
+    }
+
+    this.count = count + descendants
+    this.hasWidgets = hasWidgets
+    this.hasThunks = hasThunks
+    this.hooks = hooks
+    this.descendantHooks = descendantHooks
+}
+
+VirtualNode.prototype.version = version
+VirtualNode.prototype.type = "VirtualNode"
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var version = __webpack_require__(2)
+
+module.exports = VirtualText
+
+function VirtualText(text) {
+    this.text = String(text)
+}
+
+VirtualText.prototype.version = version
+VirtualText.prototype.type = "VirtualText"
+
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(8)
+var isHook = __webpack_require__(4)
+
+module.exports = diffProps
+
+function diffProps(a, b) {
+    var diff
+
+    for (var aKey in a) {
+        if (!(aKey in b)) {
+            diff = diff || {}
+            diff[aKey] = undefined
+        }
+
+        var aValue = a[aKey]
+        var bValue = b[aKey]
+
+        if (aValue === bValue) {
+            continue
+        } else if (isObject(aValue) && isObject(bValue)) {
+            if (getPrototype(bValue) !== getPrototype(aValue)) {
+                diff = diff || {}
+                diff[aKey] = bValue
+            } else if (isHook(bValue)) {
+                 diff = diff || {}
+                 diff[aKey] = bValue
+            } else {
+                var objectDiff = diffProps(aValue, bValue)
+                if (objectDiff) {
+                    diff = diff || {}
+                    diff[aKey] = objectDiff
+                }
+            }
+        } else {
+            diff = diff || {}
+            diff[aKey] = bValue
+        }
+    }
+
+    for (var bKey in b) {
+        if (!(bKey in a)) {
+            diff = diff || {}
+            diff[bKey] = b[bKey]
+        }
+    }
+
+    return diff
+}
+
+function getPrototype(value) {
+  if (Object.getPrototypeOf) {
+    return Object.getPrototypeOf(value)
+  } else if (value.__proto__) {
+    return value.__proto__
+  } else if (value.constructor) {
+    return value.constructor.prototype
+  }
+}
+
+
+/***/ }),
+/* 40 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isArray = __webpack_require__(6)
+
+var VPatch = __webpack_require__(12)
+var isVNode = __webpack_require__(1)
+var isVText = __webpack_require__(5)
+var isWidget = __webpack_require__(0)
+var isThunk = __webpack_require__(3)
+var handleThunk = __webpack_require__(11)
+
+var diffProps = __webpack_require__(39)
+
+module.exports = diff
+
+function diff(a, b) {
+    var patch = { a: a }
+    walk(a, b, patch, 0)
+    return patch
+}
+
+function walk(a, b, patch, index) {
+    if (a === b) {
+        return
+    }
+
+    var apply = patch[index]
+    var applyClear = false
+
+    if (isThunk(a) || isThunk(b)) {
+        thunks(a, b, patch, index)
+    } else if (b == null) {
+
+        // If a is a widget we will add a remove patch for it
+        // Otherwise any child widgets/hooks must be destroyed.
+        // This prevents adding two remove patches for a widget.
+        if (!isWidget(a)) {
+            clearState(a, patch, index)
+            apply = patch[index]
+        }
+
+        apply = appendPatch(apply, new VPatch(VPatch.REMOVE, a, b))
+    } else if (isVNode(b)) {
+        if (isVNode(a)) {
+            if (a.tagName === b.tagName &&
+                a.namespace === b.namespace &&
+                a.key === b.key) {
+                var propsPatch = diffProps(a.properties, b.properties)
+                if (propsPatch) {
+                    apply = appendPatch(apply,
+                        new VPatch(VPatch.PROPS, a, propsPatch))
+                }
+                apply = diffChildren(a, b, patch, apply, index)
+            } else {
+                apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
+                applyClear = true
+            }
+        } else {
+            apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
+            applyClear = true
+        }
+    } else if (isVText(b)) {
+        if (!isVText(a)) {
+            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
+            applyClear = true
+        } else if (a.text !== b.text) {
+            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
+        }
+    } else if (isWidget(b)) {
+        if (!isWidget(a)) {
+            applyClear = true
+        }
+
+        apply = appendPatch(apply, new VPatch(VPatch.WIDGET, a, b))
+    }
+
+    if (apply) {
+        patch[index] = apply
+    }
+
+    if (applyClear) {
+        clearState(a, patch, index)
+    }
+}
+
+function diffChildren(a, b, patch, apply, index) {
+    var aChildren = a.children
+    var orderedSet = reorder(aChildren, b.children)
+    var bChildren = orderedSet.children
+
+    var aLen = aChildren.length
+    var bLen = bChildren.length
+    var len = aLen > bLen ? aLen : bLen
+
+    for (var i = 0; i < len; i++) {
+        var leftNode = aChildren[i]
+        var rightNode = bChildren[i]
+        index += 1
+
+        if (!leftNode) {
+            if (rightNode) {
+                // Excess nodes in b need to be added
+                apply = appendPatch(apply,
+                    new VPatch(VPatch.INSERT, null, rightNode))
+            }
+        } else {
+            walk(leftNode, rightNode, patch, index)
+        }
+
+        if (isVNode(leftNode) && leftNode.count) {
+            index += leftNode.count
+        }
+    }
+
+    if (orderedSet.moves) {
+        // Reorder nodes last
+        apply = appendPatch(apply, new VPatch(
+            VPatch.ORDER,
+            a,
+            orderedSet.moves
+        ))
+    }
+
+    return apply
+}
+
+function clearState(vNode, patch, index) {
+    // TODO: Make this a single walk, not two
+    unhook(vNode, patch, index)
+    destroyWidgets(vNode, patch, index)
+}
+
+// Patch records for all destroyed widgets must be added because we need
+// a DOM node reference for the destroy function
+function destroyWidgets(vNode, patch, index) {
+    if (isWidget(vNode)) {
+        if (typeof vNode.destroy === "function") {
+            patch[index] = appendPatch(
+                patch[index],
+                new VPatch(VPatch.REMOVE, vNode, null)
+            )
+        }
+    } else if (isVNode(vNode) && (vNode.hasWidgets || vNode.hasThunks)) {
+        var children = vNode.children
+        var len = children.length
+        for (var i = 0; i < len; i++) {
+            var child = children[i]
+            index += 1
+
+            destroyWidgets(child, patch, index)
+
+            if (isVNode(child) && child.count) {
+                index += child.count
+            }
+        }
+    } else if (isThunk(vNode)) {
+        thunks(vNode, null, patch, index)
+    }
+}
+
+// Create a sub-patch for thunks
+function thunks(a, b, patch, index) {
+    var nodes = handleThunk(a, b)
+    var thunkPatch = diff(nodes.a, nodes.b)
+    if (hasPatches(thunkPatch)) {
+        patch[index] = new VPatch(VPatch.THUNK, null, thunkPatch)
+    }
+}
+
+function hasPatches(patch) {
+    for (var index in patch) {
+        if (index !== "a") {
+            return true
+        }
+    }
+
+    return false
+}
+
+// Execute hooks when two nodes are identical
+function unhook(vNode, patch, index) {
+    if (isVNode(vNode)) {
+        if (vNode.hooks) {
+            patch[index] = appendPatch(
+                patch[index],
+                new VPatch(
+                    VPatch.PROPS,
+                    vNode,
+                    undefinedKeys(vNode.hooks)
+                )
+            )
+        }
+
+        if (vNode.descendantHooks || vNode.hasThunks) {
+            var children = vNode.children
+            var len = children.length
+            for (var i = 0; i < len; i++) {
+                var child = children[i]
+                index += 1
+
+                unhook(child, patch, index)
+
+                if (isVNode(child) && child.count) {
+                    index += child.count
+                }
+            }
+        }
+    } else if (isThunk(vNode)) {
+        thunks(vNode, null, patch, index)
+    }
+}
+
+function undefinedKeys(obj) {
+    var result = {}
+
+    for (var key in obj) {
+        result[key] = undefined
+    }
+
+    return result
+}
+
+// List diff, naive left to right reordering
+function reorder(aChildren, bChildren) {
+    // O(M) time, O(M) memory
+    var bChildIndex = keyIndex(bChildren)
+    var bKeys = bChildIndex.keys
+    var bFree = bChildIndex.free
+
+    if (bFree.length === bChildren.length) {
+        return {
+            children: bChildren,
+            moves: null
+        }
+    }
+
+    // O(N) time, O(N) memory
+    var aChildIndex = keyIndex(aChildren)
+    var aKeys = aChildIndex.keys
+    var aFree = aChildIndex.free
+
+    if (aFree.length === aChildren.length) {
+        return {
+            children: bChildren,
+            moves: null
+        }
+    }
+
+    // O(MAX(N, M)) memory
+    var newChildren = []
+
+    var freeIndex = 0
+    var freeCount = bFree.length
+    var deletedItems = 0
+
+    // Iterate through a and match a node in b
+    // O(N) time,
+    for (var i = 0 ; i < aChildren.length; i++) {
+        var aItem = aChildren[i]
+        var itemIndex
+
+        if (aItem.key) {
+            if (bKeys.hasOwnProperty(aItem.key)) {
+                // Match up the old keys
+                itemIndex = bKeys[aItem.key]
+                newChildren.push(bChildren[itemIndex])
+
+            } else {
+                // Remove old keyed items
+                itemIndex = i - deletedItems++
+                newChildren.push(null)
+            }
+        } else {
+            // Match the item in a with the next free item in b
+            if (freeIndex < freeCount) {
+                itemIndex = bFree[freeIndex++]
+                newChildren.push(bChildren[itemIndex])
+            } else {
+                // There are no free items in b to match with
+                // the free items in a, so the extra free nodes
+                // are deleted.
+                itemIndex = i - deletedItems++
+                newChildren.push(null)
+            }
+        }
+    }
+
+    var lastFreeIndex = freeIndex >= bFree.length ?
+        bChildren.length :
+        bFree[freeIndex]
+
+    // Iterate through b and append any new keys
+    // O(M) time
+    for (var j = 0; j < bChildren.length; j++) {
+        var newItem = bChildren[j]
+
+        if (newItem.key) {
+            if (!aKeys.hasOwnProperty(newItem.key)) {
+                // Add any new keyed items
+                // We are adding new items to the end and then sorting them
+                // in place. In future we should insert new items in place.
+                newChildren.push(newItem)
+            }
+        } else if (j >= lastFreeIndex) {
+            // Add any leftover non-keyed items
+            newChildren.push(newItem)
+        }
+    }
+
+    var simulate = newChildren.slice()
+    var simulateIndex = 0
+    var removes = []
+    var inserts = []
+    var simulateItem
+
+    for (var k = 0; k < bChildren.length;) {
+        var wantedItem = bChildren[k]
+        simulateItem = simulate[simulateIndex]
+
+        // remove items
+        while (simulateItem === null && simulate.length) {
+            removes.push(remove(simulate, simulateIndex, null))
+            simulateItem = simulate[simulateIndex]
+        }
+
+        if (!simulateItem || simulateItem.key !== wantedItem.key) {
+            // if we need a key in this position...
+            if (wantedItem.key) {
+                if (simulateItem && simulateItem.key) {
+                    // if an insert doesn't put this key in place, it needs to move
+                    if (bKeys[simulateItem.key] !== k + 1) {
+                        removes.push(remove(simulate, simulateIndex, simulateItem.key))
+                        simulateItem = simulate[simulateIndex]
+                        // if the remove didn't put the wanted item in place, we need to insert it
+                        if (!simulateItem || simulateItem.key !== wantedItem.key) {
+                            inserts.push({key: wantedItem.key, to: k})
+                        }
+                        // items are matching, so skip ahead
+                        else {
+                            simulateIndex++
+                        }
+                    }
+                    else {
+                        inserts.push({key: wantedItem.key, to: k})
+                    }
+                }
+                else {
+                    inserts.push({key: wantedItem.key, to: k})
+                }
+                k++
+            }
+            // a key in simulate has no matching wanted key, remove it
+            else if (simulateItem && simulateItem.key) {
+                removes.push(remove(simulate, simulateIndex, simulateItem.key))
+            }
+        }
+        else {
+            simulateIndex++
+            k++
+        }
+    }
+
+    // remove all the remaining nodes from simulate
+    while(simulateIndex < simulate.length) {
+        simulateItem = simulate[simulateIndex]
+        removes.push(remove(simulate, simulateIndex, simulateItem && simulateItem.key))
+    }
+
+    // If the only moves we have are deletes then we can just
+    // let the delete patch remove these items.
+    if (removes.length === deletedItems && !inserts.length) {
+        return {
+            children: newChildren,
+            moves: null
+        }
+    }
+
+    return {
+        children: newChildren,
+        moves: {
+            removes: removes,
+            inserts: inserts
+        }
+    }
+}
+
+function remove(arr, index, key) {
+    arr.splice(index, 1)
+
+    return {
+        from: index,
+        key: key
+    }
+}
+
+function keyIndex(children) {
+    var keys = {}
+    var free = []
+    var length = children.length
+
+    for (var i = 0; i < length; i++) {
+        var child = children[i]
+
+        if (child.key) {
+            keys[child.key] = i
+        } else {
+            free.push(i)
+        }
+    }
+
+    return {
+        keys: keys,     // A hash of key name to index
+        free: free      // An array of unkeyed item indices
+    }
+}
+
+function appendPatch(apply, patch) {
+    if (apply) {
+        if (isArray(apply)) {
+            apply.push(patch)
+        } else {
+            apply = [apply, patch]
+        }
+
+        return apply
+    } else {
+        return patch
+    }
+}
+
+
+/***/ }),
+/* 41 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+
+class MALjs {
+    constructor(user, password) {
+      if (!user || !password) {
+        throw new Error('MALjs requires a myanimelist.net username and password.');
+      }
+
+      this._user = user;
+      this._password = password;
+      this._base = 'https://myanimelist.net';
+
+      this._parser = new DOMParser();
+
+      this.anime = {
+        search: (query) => {
+          return this.search(query, 'anime');
+        },
+        list: () => {
+          return this.list('anime');
+        },
+        add: (id, data) => {
+          return this.add(id, data, 'anime');
+        },
+        update: (id, data) => {
+          return this.update(id, data, 'anime');
+        },
+        delete: (id, data) => {
+          return this.delete(id, 'anime');
+        }
+      };
+
+      this.manga = {
+        search: (query) => {
+          return this.search(query, 'manga');
+        },
+        list: () => {
+          return this.list('manga');
+        },
+        add: (id, data) => {
+          return this.add(id, data, 'manga');
+        },
+        update: (id, data) => {
+          return this.update(id, data, 'manga');
+        },
+        delete: (id, data) => {
+          return this.delete(id, 'manga');
+        }
+      };
+
+    }
+
+    search(query, type) {
+      this._checkType(type);
+
+      return this._get(`${this._base}/api/${type}/search.xml?q=${query}`);
+    }
+
+    list(type) {
+      this._checkType(type);
+      return this._get(`${this._base}/malappinfo.php?u=${this._user}&status=all&type=${type}`);
+    }
+
+    add(id, data, type) {
+      this._checkType(type);
+
+      if (!data) {
+        return;
+      }
+
+      if (!data.entry) {
+        data = {entry: data};
+      }
+
+      return this._post(`${this._base}/api/${type}list/add/${id}.xml`, data);
+    }
+
+    update(id, data, type) {
+      this._checkType(type);
+
+      if (!data) {
+        return;
+      }
+
+      if (!data.entry) {
+        data = {entry: data};
+      }
+
+      return this._post(`${this._base}/api/${type}list/update/${id}.xml`, data);
+    }
+
+    delete(id, type) {
+      this._checkType(type);
+      return this._post(`${this._base}/api/${type}list/delete/${id}.xml`);
+    }
+
+    verifyCredentials() {
+      return this._get(`${this._base}/api/account/verify_credentials.xml`);
+    }
+
+    _checkType(type) {
+      if (type !== 'anime' && type !== 'manga') {
+        throw new Error('Only allowed types are anime and manga. incorrect type: '+type +' given.')
+      }
+    }
+
+    _xmlToJson(xmlString) {
+      return new Promise((resolve, reject) => {
+
+        const dom = this._parser.parseFromString(xmlString, "text/xml");
+
+        if (dom.documentElement.nodeName === "html") {
+          reject('Failed to parse xml.');
+        } else {
+          resolve(this._domToJson(dom));
+        }
+
+      });
+    }
+
+    _domToJson(dom) {
+      const nodes = dom.childNodes;
+      const object = {};
+
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+
+        if (node.nodeName === 'myanimelist') {
+          object[node.nodeName] = {};
+        } else {
+          object[node.nodeName] = [];
+        }
+
+
+        const childNodes = node.childNodes;
+
+
+        for (let i = 0; i < childNodes.length; i++) {
+          const entryNode = childNodes[i];
+          const entryObject = {};
+
+          // Skip empty text nodes.
+          if (entryNode.nodeName === '#text')
+            continue;
+
+          const items = entryNode.childNodes;
+
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+
+            if (item.nodeName === '#text')
+              continue;
+
+            let value = item.innerHTML;
+
+            if (item.nodeName === 'id' || item.nodeName === 'episodes') {
+              value = parseInt(value, 10);
+            }
+
+            entryObject[item.nodeName] = value;
+          }
+
+          if (node.nodeName === 'myanimelist') {
+            if (entryNode.nodeName === 'anime' || entryNode.nodeName === 'manga') {
+              if (!object[node.nodeName][entryNode.nodeName]) {
+                object[node.nodeName][entryNode.nodeName] = [];
+              }
+              object[node.nodeName][entryNode.nodeName].push(entryObject);
+            } else {
+              object[node.nodeName][entryNode.nodeName] = entryObject;
+            }
+          } else {
+            object[node.nodeName].push(entryObject);
+          }
+        }
+      }
+
+      return object;
+    }
+
+    _toXml(object) {
+      let xmlString = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`;
+
+      function getProps(obj) {
+        for (let property in obj) {
+          if (obj.hasOwnProperty(property)){
+            if (obj[property].constructor == Object) {
+              xmlString += `<${property}>`;
+              getProps(obj[property]);
+              xmlString += `</${property}>`;
+            } else {
+              xmlString += `<${property}>${obj[property]}</${property}>`;
+            }
+          }
+        }
+      }
+
+      getProps(object);
+
+      return xmlString;
+    }
+
+    _get(url) {
+      return new Promise((resolve, reject) => {
+          this._getForBrowser(url, resolve, reject);
+      });
+    }
+
+    _getForBrowser(url, resolve, reject) {
+      var req = new XMLHttpRequest();
+      req.open('GET', url, true, this._user, this._password);
+      req.onload = () => {
+        if (req.status === 200) {
+          const data = req.response;
+
+          // Covert the xml string to json
+          this._xmlToJson(data)
+            .then(resolve)
+            .catch(reject);
+
+        } else {
+          reject('request failed');
+        }
+      };
+
+      req.onerror = () => {
+        reject('request failed');
+      };
+
+      req.send();
+    }
+
+    _post(url, data=null) {
+      return new Promise((resolve, reject) => {
+        this._postForBrowser(url, data, resolve, reject);
+      });
+    }
+
+    _postForBrowser(url, data, resolve, reject) {
+      var req = new XMLHttpRequest();
+      req.open('POST', url, true, this._user, this._password);
+      req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+      req.onload = function() {
+        if (req.status === 200 || req.status === 201) {
+          resolve(req.response);
+        } else {
+          reject(req.response);
+        }
+      };
+
+      req.onerror = function() {
+        reject('request failed');
+      };
+
+      if (data) {
+        var xml = this._toXml(data);
+        req.send('data='+xml);
+      } else {
+        req.send();
+      }
+    }
+  }
+/* harmony export (immutable) */ __webpack_exports__["a"] = MALjs;
+;
+
+
+/***/ }),
+/* 42 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__list_data__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mal_api__ = __webpack_require__(41);
+/* harmony export (immutable) */ __webpack_exports__["a"] = mal;
+
+
+
+
+
+const seasons = {
+  winter: new Date('2017-01-01')
+};
+
+function mal() {
+  const api = new __WEBPACK_IMPORTED_MODULE_1__mal_api__["a" /* default */]('apitest1234', 'OXtmfmalpoHU');
+
+  return {
+    authenticate: (username, password) => {
+      return Promise.resolve(true);
+    },
+
+    updateEpisodeCount: (id, episode) => {
+      console.warn('TEMP DISABLED');
+      return;
+
+      if (!id || !episode)
+        return;
+
+      return api.anime.update(id, {
+        episode: episode
+      }).then(result => console.log(result));
+    },
+
+    list: function() {
+      const formatData = anime => ({
+        id: parseInt(anime.series_animedb_id, 10),
+        title: anime.series_title,
+        image: anime.series_image,
+        starts: anime.series_start,
+        ends: anime.series_end,
+        status: parseInt(anime.my_status, 10),
+        currentEpisode: parseInt(anime.my_watched_episodes, 10),
+        episodeCount: parseInt(anime.series_episodes, 10) ? parseInt(anime.series_episodes, 10) : null,
+      });
+
+      const data = __WEBPACK_IMPORTED_MODULE_0__list_data__["a" /* list */].map(formatData);
+
+      const get = function() {
+        return new Promise(resolve => {
+          resolve(data);
+          console.warn('Using fake data');
+
+          // api.anime.list().then(data => {
+          //   resolve(data.myanimelist.anime.map(formatData));
+          // });
+        });
+      };
+
+      return {
+        get
+      };
+    }()
+  };
+};
+
+
+/***/ }),
+/* 43 */
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
+/***/ }),
+/* 44 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__shell__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__shell__ = __webpack_require__(14);
 
 
 

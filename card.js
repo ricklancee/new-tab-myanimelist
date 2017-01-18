@@ -1,7 +1,8 @@
 'use strict';
 
-export default function card({toHtml, bus}, refElement, anime) {
+export default function card({ virtualDom, bus }, refElement, anime) {
   let blockChangeEvent = false;
+  let tree, rootNode;
 
   const setState = function(newState) {
     return new Proxy(newState, {
@@ -14,34 +15,57 @@ export default function card({toHtml, bus}, refElement, anime) {
           if (!blockChangeEvent)
             bus.emit('card:changed', clone);
 
-          render();
+          update();
           return true;
         },
       });
   };
 
   const cardTemplate = function(anime) {
-    const template = `
-      <div class="card card--showTitleOnHover" data-id="${anime.id}">
-        <div class="card__title">
-          <p>${ anime.title }</p>
-        </div>
-        <figure class="card__image-container">
-          <img src="${anime.image}" alt="${anime.title}">
-        </figure>
-        <div class="card__controls">
-          <button class="card__episode-button" data-ref="decrement">-</button>
-          <div class="card__episode-count">
-            <div>
-              <span>Episodes seen:</span>
-              <span>${anime.currentEpisode}/${anime.episodeCount ? anime.episodeCount : '??'}</span>
-            </div>
-          </div>
-          <button class="card__episode-button" data-ref="increment">+</button>
-        </div>
-      </div>`;
-
-    return toHtml(template);
+    return virtualDom.h("div.card.card--showTitleOnHover.isStatus-"+anime.status, {
+      "attributes": {
+        "data-id": anime.id
+      }
+    }, [
+        virtualDom.h("div.card__title", [
+          virtualDom.h("p", anime.title)
+        ]),
+        virtualDom.h("figure.card__image-container", [
+          virtualDom.h("a.card__link", {attributes: {target: '_blank', href: 'https://myanimelist.net/anime/'+anime.id}}, [
+            virtualDom.h("img", {
+              "attributes": {
+                "src": anime.image,
+                "alt": anime.title
+              }
+            })
+          ])
+        ]),
+        virtualDom.h("div.card__controls", [
+          virtualDom.h("button.card__episode-button", {
+            "attributes": {
+              "data-ref": "decrement",
+              "className": "card__episode-button"
+            }
+          }, `-`),
+          virtualDom.h("div.card__episode-count", [
+            virtualDom.h("div", [
+              virtualDom.h("input.episode-count__input", {attributes: {
+                type: 'number',
+                value: anime.currentEpisode,
+                "data-ref": "input",
+              }}),
+              virtualDom.h("span.episode-count__title", `Episodes seen:`),
+              virtualDom.h("span.episode-count__episodes", anime.currentEpisode+`/`+(anime.episodeCount ? anime.episodeCount : '??'))
+            ])
+          ]),
+          virtualDom.h("button.card__episode-button", {
+            "attributes": {
+              "data-ref": "increment",
+              "className": "card__episode-button"
+            }
+          }, `+`)
+        ])
+    ]);
   };
 
   const incrementEpisode = function() {
@@ -49,6 +73,9 @@ export default function card({toHtml, bus}, refElement, anime) {
       return;
 
     state.currentEpisode = state.currentEpisode + 1;
+
+    rootNode.querySelector('[data-ref="input"]').value = state.currentEpisode;
+
     bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
   };
 
@@ -57,24 +84,34 @@ export default function card({toHtml, bus}, refElement, anime) {
       return;
 
     state.currentEpisode = state.currentEpisode - 1;
+
+    rootNode.querySelector('[data-ref="input"]').value = state.currentEpisode;
+
+    bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
+  };
+
+  const changeEpisode = function(event) {
+    console.log(event.target.value);
+    state.currentEpisode = parseInt(event.target.value);
     bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
   };
 
   const render = function() {
-    // This rerenders the entire node, which might have
-    // an impact on performance.
-    const node = cardTemplate(state);
+    tree = cardTemplate(state);
+    rootNode = virtualDom.createElement(tree);
+    refElement.appendChild(rootNode);
 
-    // Add Event Listeners
-    node.querySelector('[data-ref="increment"]').addEventListener('click', incrementEpisode);
-    node.querySelector('[data-ref="decrement"]').addEventListener('click', decrementEpisode);
+    // Event listeners
+    rootNode.querySelector('[data-ref="increment"]').addEventListener('click', incrementEpisode);
+    rootNode.querySelector('[data-ref="decrement"]').addEventListener('click', decrementEpisode);
+    rootNode.querySelector('[data-ref="input"]').addEventListener('change', changeEpisode);
+  };
 
-    // Add to the dom, replace it if it already exists.
-    if (refElement.firstElementChild) {
-      refElement.replaceChild(node, refElement.firstElementChild);
-    } else {
-      refElement.appendChild(node);
-    }
+  const update = function() {
+    const newTree = cardTemplate(state);
+    const patches = virtualDom.diff(tree, newTree);
+    rootNode = virtualDom.patch(rootNode, patches);
+    tree = newTree;
   };
 
   const state = setState(anime);

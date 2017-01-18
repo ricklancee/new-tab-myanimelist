@@ -9,20 +9,26 @@
   <body>
     <header class="app-header">
       <a href="/" class="brandmark">
-        <h1>Weekly.moe</h1>
-        <p>Your anime tracker</p>
+        <h1>Weekly.moe<span class="heart">❤</span></h1>
+        <p>An anime list</p>
       </a>
-      <a href="#settings">Settings</a>
     </header>
     <main class="app-content">
-      <div class="filter-status">
-        <span>status:<span>
-        <button>All</button>
-        <button>Watching</button>
-        <button>Completed</button>
-        <button>On Hold</button>
-        <button>Dropped</button>
-        <button>Plan to Watch</button>
+      <div class="filters">
+        <div class="filter-status">
+          <span>Status:<span>
+          <button class="all" data-filter-status="all">All</button>
+          <button class="watching" data-filter-status="watching">Watching</button>
+          <button class="completed" data-filter-status="completed">Completed</button>
+          <button class="onhold" data-filter-status="onhold">On Hold</button>
+          <button class="dropped" data-filter-status="dropped">Dropped</button>
+          <button class="plantowatch" data-filter-status="plantowatch">Plan to Watch</button>
+        </div>
+        <div class="filter-season">
+          <span>Season:<span>
+          <button data-filter-season="all">All</button>
+          <button data-filter-season="current">Winter 2017</button>
+        </div>
       </div>
       <ul class="card-container"></ul>
     </main>

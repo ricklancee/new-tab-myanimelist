@@ -1,72 +1,31 @@
 'use strict';
 
-import toHtml from 'string-to-html';
 import core from './core';
-// import MALjs from './MALjs';
+
+// Providers
+import mal from './providers/mal';
+
+// Utilities
 import mediator from './mediator';
 
-import { list } from './list-data';
-
-const seasons = {
-  winter: new Date('2017-01-01')
-};
+// Virtual domming
+import h from 'virtual-dom/h';
+import diff from 'virtual-dom/diff';
+import patch from 'virtual-dom/patch';
+import createElement from 'virtual-dom/create-element';
 
 const services = {
+  virtualDom: {
+    h,
+    diff,
+    patch,
+    createElement
+  },
   providers: {
-    mal: { // provider interface
-      authenticate: (username, password) => {
-        return Promise.resolve(true);
-      },
-      update: () => {
-        return Promise.resolve(true);
-      },
-      list: function() {
-        const data = list.map(anime => ({
-          id: parseInt(anime.series_animedb_id),
-          title: anime.series_title,
-          image: anime.series_image,
-          starts: anime.series_start,
-          ends: anime.series_end,
-          status: parseInt(anime.series_status),
-          currentEpisode: parseInt(anime.my_watched_episodes),
-          episodeCount: parseInt(anime.series_episodes) ? parseInt(anime.series_episodes) : null,
-        }));
-
-        const get = function() {
-          return Promise.resolve(data);
-        };
-
-        const isWatching = item => item.status === 1;
-        const inWinterSeason = item => (new Date(item.starts).getTime() > seasons.winter.getTime());
-
-        const currentSeason = async function () {
-          const list = await get();
-
-          return list
-            .filter(inWinterSeason)
-            .filter(isWatching)
-            .sort((a, b) => {
-                const dateA = new Date(a.starts);
-                const dateB = new Date(b.starts);
-
-                if (dateA.getTime() > dateB.getTime())
-                  return 1;
-
-                return -1;
-            });
-        };
-
-        return {
-          currentSeason,
-          get
-        };
-      }(),
-
-    }
+    mal: mal()
   },
   storage: localStorage,
-  toHtml: toHtml,
-  bus: mediator(),
+  bus: mediator()
 };
 
 export default function shell(opts = { log: false }) {

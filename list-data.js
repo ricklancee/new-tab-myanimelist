@@ -3223,7 +3223,7 @@ export const list =  [
          "series_status": "1",
          "series_start": "2017-01-08",
          "series_end": "0000-00-00",
-         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/83861.jpg",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/83933.jpg",
          "my_id": "0",
          "my_watched_episodes": "0",
          "my_start_date": "0000-00-00",
