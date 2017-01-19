@@ -4,7 +4,7 @@ import card from './card';
 import cardContainer from './cardContainer';
 import actions from './actions';
 
-export default async function core(services) {
+export default function core(services) {
   console.info('initialize with ', services);
 
   const provider = services.providers.mal;
@@ -24,7 +24,7 @@ export default async function core(services) {
     prompt = true;
   }
 
-  let list;
+  let list = [];
 
   if (cachedList) {
     console.info('Using cached list.');
@@ -46,7 +46,6 @@ export default async function core(services) {
   document.querySelector('[data-filter-status="'+ status +'"]').classList.add('active');
   filterAllSeasons.classList.add('active');
 
-
   const handleFilterCurrentSeasonClick = function(event) {
     filterAllSeasons.classList.remove('active');
     event.target.classList.add('active');
@@ -55,7 +54,6 @@ export default async function core(services) {
     year = 2017;
 
     container.filter(status, season, year);
-    container.sort();
     container.render();
   };
 
@@ -66,8 +64,7 @@ export default async function core(services) {
     season = 'all';
     year = 'all';
 
-    container.filter(status, 'all', year);
-    container.sort();
+    container.filter(status, season, year);
     container.render();
   };
 
@@ -78,7 +75,6 @@ export default async function core(services) {
     event.target.classList.add('active');
 
     container.filter(status, season, year);
-    container.sort();
     container.render();
   };
 
@@ -89,19 +85,22 @@ export default async function core(services) {
 
   if (cachedList) {
     container.filter(status, season, year);
-    container.sort();
     container.render();
   }
 
-  window.container = container;
+  services.providers.mal.list.get().then(data => {
+    // console.info('Fetched list from provider.');
 
-  // services.providers.mal.list.get().then(data => {
-  //   console.info('Fetched list from provider.');
-  //   list = data;
-  //   services.storage.setItem('app.list', JSON.stringify(data));
+    // console.log(data.length, list.length);
+    // // Update the container state list only if there are changes
+    // const json = JSON.stringify(data);
+    // if (cachedList !== json) {
+    //   container.updateState(data);
+    //   // Recache list.
+    //   services.storage.setItem('app.list', json);
+    // }
 
-  //   // Re-render
-  // });
+  });
 
   // console.log('Checking if logged in...');
   // If not prompt log in -> store credentials if remember is on.

@@ -43,8 +43,10 @@ export default function mal() {
 
       const get = function() {
         return new Promise(resolve => {
-          resolve(data);
-          console.warn('Using fake data');
+          setTimeout(() => {
+            console.warn('Fetched fake data');
+            resolve(data);
+          }, 545);
 
           // api.anime.list().then(data => {
           //   resolve(data.myanimelist.anime.map(formatData));

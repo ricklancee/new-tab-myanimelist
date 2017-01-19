@@ -63,397 +63,18 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 44);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports) {
-
-module.exports = isWidget
-
-function isWidget(w) {
-    return w && w.type === "Widget"
-}
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var version = __webpack_require__(2)
-
-module.exports = isVirtualNode
-
-function isVirtualNode(x) {
-    return x && x.type === "VirtualNode" && x.version === version
-}
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-module.exports = "2"
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports) {
-
-module.exports = isThunk
-
-function isThunk(t) {
-    return t && t.type === "Thunk"
-}
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-module.exports = isHook
-
-function isHook(hook) {
-    return hook &&
-      (typeof hook.hook === "function" && !hook.hasOwnProperty("hook") ||
-       typeof hook.unhook === "function" && !hook.hasOwnProperty("unhook"))
-}
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var version = __webpack_require__(2)
-
-module.exports = isVirtualText
-
-function isVirtualText(x) {
-    return x && x.type === "VirtualText" && x.version === version
-}
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-var nativeIsArray = Array.isArray
-var toString = Object.prototype.toString
-
-module.exports = nativeIsArray || isArray
-
-function isArray(obj) {
-    return toString.call(obj) === "[object Array]"
-}
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global) {var topLevel = typeof global !== 'undefined' ? global :
-    typeof window !== 'undefined' ? window : {}
-var minDoc = __webpack_require__(43);
-
-if (typeof document !== 'undefined') {
-    module.exports = document;
-} else {
-    var doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'];
-
-    if (!doccy) {
-        doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'] = minDoc;
-    }
-
-    module.exports = doccy;
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function isObject(x) {
-	return typeof x === "object" && x !== null;
-};
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var isObject = __webpack_require__(8)
-var isHook = __webpack_require__(4)
-
-module.exports = applyProperties
-
-function applyProperties(node, props, previous) {
-    for (var propName in props) {
-        var propValue = props[propName]
-
-        if (propValue === undefined) {
-            removeProperty(node, propName, propValue, previous);
-        } else if (isHook(propValue)) {
-            removeProperty(node, propName, propValue, previous)
-            if (propValue.hook) {
-                propValue.hook(node,
-                    propName,
-                    previous ? previous[propName] : undefined)
-            }
-        } else {
-            if (isObject(propValue)) {
-                patchObject(node, props, previous, propName, propValue);
-            } else {
-                node[propName] = propValue
-            }
-        }
-    }
-}
-
-function removeProperty(node, propName, propValue, previous) {
-    if (previous) {
-        var previousValue = previous[propName]
-
-        if (!isHook(previousValue)) {
-            if (propName === "attributes") {
-                for (var attrName in previousValue) {
-                    node.removeAttribute(attrName)
-                }
-            } else if (propName === "style") {
-                for (var i in previousValue) {
-                    node.style[i] = ""
-                }
-            } else if (typeof previousValue === "string") {
-                node[propName] = ""
-            } else {
-                node[propName] = null
-            }
-        } else if (previousValue.unhook) {
-            previousValue.unhook(node, propName, propValue)
-        }
-    }
-}
-
-function patchObject(node, props, previous, propName, propValue) {
-    var previousValue = previous ? previous[propName] : undefined
-
-    // Set attributes
-    if (propName === "attributes") {
-        for (var attrName in propValue) {
-            var attrValue = propValue[attrName]
-
-            if (attrValue === undefined) {
-                node.removeAttribute(attrName)
-            } else {
-                node.setAttribute(attrName, attrValue)
-            }
-        }
-
-        return
-    }
-
-    if(previousValue && isObject(previousValue) &&
-        getPrototype(previousValue) !== getPrototype(propValue)) {
-        node[propName] = propValue
-        return
-    }
-
-    if (!isObject(node[propName])) {
-        node[propName] = {}
-    }
-
-    var replacer = propName === "style" ? "" : undefined
-
-    for (var k in propValue) {
-        var value = propValue[k]
-        node[propName][k] = (value === undefined) ? replacer : value
-    }
-}
-
-function getPrototype(value) {
-    if (Object.getPrototypeOf) {
-        return Object.getPrototypeOf(value)
-    } else if (value.__proto__) {
-        return value.__proto__
-    } else if (value.constructor) {
-        return value.constructor.prototype
-    }
-}
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var document = __webpack_require__(7)
-
-var applyProperties = __webpack_require__(9)
-
-var isVNode = __webpack_require__(1)
-var isVText = __webpack_require__(5)
-var isWidget = __webpack_require__(0)
-var handleThunk = __webpack_require__(11)
-
-module.exports = createElement
-
-function createElement(vnode, opts) {
-    var doc = opts ? opts.document || document : document
-    var warn = opts ? opts.warn : null
-
-    vnode = handleThunk(vnode).a
-
-    if (isWidget(vnode)) {
-        return vnode.init()
-    } else if (isVText(vnode)) {
-        return doc.createTextNode(vnode.text)
-    } else if (!isVNode(vnode)) {
-        if (warn) {
-            warn("Item is not a valid virtual dom node", vnode)
-        }
-        return null
-    }
-
-    var node = (vnode.namespace === null) ?
-        doc.createElement(vnode.tagName) :
-        doc.createElementNS(vnode.namespace, vnode.tagName)
-
-    var props = vnode.properties
-    applyProperties(node, props)
-
-    var children = vnode.children
-
-    for (var i = 0; i < children.length; i++) {
-        var childNode = createElement(children[i], opts)
-        if (childNode) {
-            node.appendChild(childNode)
-        }
-    }
-
-    return node
-}
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var isVNode = __webpack_require__(1)
-var isVText = __webpack_require__(5)
-var isWidget = __webpack_require__(0)
-var isThunk = __webpack_require__(3)
-
-module.exports = handleThunk
-
-function handleThunk(a, b) {
-    var renderedA = a
-    var renderedB = b
-
-    if (isThunk(b)) {
-        renderedB = renderThunk(b, a)
-    }
-
-    if (isThunk(a)) {
-        renderedA = renderThunk(a, null)
-    }
-
-    return {
-        a: renderedA,
-        b: renderedB
-    }
-}
-
-function renderThunk(thunk, previous) {
-    var renderedThunk = thunk.vnode
-
-    if (!renderedThunk) {
-        renderedThunk = thunk.vnode = thunk.render(previous)
-    }
-
-    if (!(isVNode(renderedThunk) ||
-            isVText(renderedThunk) ||
-            isWidget(renderedThunk))) {
-        throw new Error("thunk did not return a valid node");
-    }
-
-    return renderedThunk
-}
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var version = __webpack_require__(2)
-
-VirtualPatch.NONE = 0
-VirtualPatch.VTEXT = 1
-VirtualPatch.VNODE = 2
-VirtualPatch.WIDGET = 3
-VirtualPatch.PROPS = 4
-VirtualPatch.ORDER = 5
-VirtualPatch.INSERT = 6
-VirtualPatch.REMOVE = 7
-VirtualPatch.THUNK = 8
-
-module.exports = VirtualPatch
-
-function VirtualPatch(type, vNode, patch) {
-    this.type = Number(type)
-    this.vNode = vNode
-    this.patch = patch
-}
-
-VirtualPatch.prototype.version = version
-VirtualPatch.prototype.type = "VirtualPatch"
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__core__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__providers_mal__ = __webpack_require__(42);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mediator__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_virtual_dom_h__ = __webpack_require__(27);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_virtual_dom_h___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_virtual_dom_h__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_virtual_dom_diff__ = __webpack_require__(26);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_virtual_dom_diff___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_virtual_dom_diff__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_virtual_dom_patch__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_virtual_dom_patch___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_virtual_dom_patch__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_virtual_dom_create_element__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_virtual_dom_create_element___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_virtual_dom_create_element__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__core__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__providers_mal__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mediator__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_string_to_html__ = __webpack_require__(7);
 /* harmony export (immutable) */ __webpack_exports__["a"] = shell;
 
 
@@ -468,16 +89,18 @@ module.exports = g;
 // Virtual domming
 
 
-
-
-
 const services = {
-  virtualDom: {
-    h: __WEBPACK_IMPORTED_MODULE_3_virtual_dom_h___default.a,
-    diff: __WEBPACK_IMPORTED_MODULE_4_virtual_dom_diff___default.a,
-    patch: __WEBPACK_IMPORTED_MODULE_5_virtual_dom_patch___default.a,
-    createElement: __WEBPACK_IMPORTED_MODULE_6_virtual_dom_create_element___default.a
+  hash: function(string) {
+    var hash = 0, i, chr, len;
+    if (string.length === 0) return hash;
+    for (i = 0, len = string.length; i < len; i++) {
+      chr   = string.charCodeAt(i);
+      hash  = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
   },
+  toHtml: __WEBPACK_IMPORTED_MODULE_3_string_to_html__["a" /* default */],
   providers: {
     mal: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__providers_mal__["a" /* default */])()
   },
@@ -511,7 +134,7 @@ function shell(opts = { log: false }) {
 
 
 /***/ }),
-/* 15 */
+/* 1 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -519,6 +142,15 @@ function shell(opts = { log: false }) {
 
 
 function actions(bus, provider) {
+  const changes = {};
+
+  let queue = {};
+  const queuePop = function(channel, cb) {
+    if (!queue[channel]) queue[channel] = {};
+
+    clearTimeout(queue[channel].timeout);
+    queue[channel].timeout = setTimeout(cb, 350);
+  };
 
   bus.when('card:changed', (cardState) => {
     console.info('A card changed:', cardState);
@@ -526,85 +158,70 @@ function actions(bus, provider) {
 
   bus.when('anime:currentEpisodeChanged', (data) => {
     console.info('Episode count changed:', data);
-    provider.updateEpisodeCount(data.id, data.currentEpisode);
+
+    queuePop('updateEpisodeCount', () => {
+      console.log(data.id, data.currentEpisode);
+      provider.updateEpisodeCount(data.id, data.currentEpisode);
+    });
   });
 };
 
 
 /***/ }),
-/* 16 */
+/* 2 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = card;
 
 
-function card({ virtualDom, bus }, refElement, anime) {
-  let blockChangeEvent = false;
-  let tree, rootNode;
+function card({ toHtml, bus }, refElement, anime) {
+  let rootNode;
+
+  let elements = {};
 
   const setState = function(newState) {
     return new Proxy(newState, {
       set(target, key, value) {
+          const oldValue = target[key];
+
           target[key] = value;
 
           // copy the state
           const clone = Object.assign({}, target);
 
-          if (!blockChangeEvent)
-            bus.emit('card:changed', clone);
+          bus.emit('card:changed', {state: clone, oldValue, newValue: value});
 
-          update();
           return true;
         },
       });
   };
 
   const cardTemplate = function(anime) {
-    return virtualDom.h("div.card.card--showTitleOnHover.isStatus-"+anime.status, {
-      "attributes": {
-        "data-id": anime.id
-      }
-    }, [
-        virtualDom.h("div.card__title", [
-          virtualDom.h("p", anime.title)
-        ]),
-        virtualDom.h("figure.card__image-container", [
-          virtualDom.h("a.card__link", {attributes: {target: '_blank', href: 'https://myanimelist.net/anime/'+anime.id}}, [
-            virtualDom.h("img", {
-              "attributes": {
-                "src": anime.image,
-                "alt": anime.title
-              }
-            })
-          ])
-        ]),
-        virtualDom.h("div.card__controls", [
-          virtualDom.h("button.card__episode-button", {
-            "attributes": {
-              "data-ref": "decrement",
-              "className": "card__episode-button"
-            }
-          }, `-`),
-          virtualDom.h("div.card__episode-count", [
-            virtualDom.h("div", [
-              virtualDom.h("input.episode-count__input", {attributes: {
-                type: 'number',
-                value: anime.currentEpisode,
-                "data-ref": "input",
-              }}),
-              virtualDom.h("span.episode-count__title", `Episodes seen:`),
-              virtualDom.h("span.episode-count__episodes", anime.currentEpisode+`/`+(anime.episodeCount ? anime.episodeCount : '??'))
-            ])
-          ]),
-          virtualDom.h("button.card__episode-button", {
-            "attributes": {
-              "data-ref": "increment",
-              "className": "card__episode-button"
-            }
-          }, `+`)
-        ])
-    ]);
+    const template = `
+      <div class="card card--showTitleOnHover isStatus-${anime.status}" data-id="${anime.id}">
+        <div class="card__title">
+          <p data-ref="title">${ anime.title }</p>
+        </div>
+        <figure class="card__image-container">
+          <a href="https://myanimelist.net/anime/${anime.id}" class="card__link">
+            <img data-ref="image" src="${anime.image}" alt="${anime.title}">
+          </a>
+        </figure>
+        <div class="card__controls">
+          <button class="card__episode-button" data-ref="decrement">-</button>
+          <div class="card__episode-count">
+            <div>
+              <input type="number" data-ref="input" class="episode-count__input" value="${anime.currentEpisode}">
+              <span class="episode-count__title">Episodes seen:</span>
+              <span class="episode-count__episodes"><span data-ref="currentEpisode">${anime.currentEpisode}</span>/<span data-ref="episodeCount">${anime.episodeCount ? anime.episodeCount : '??'}</span></span>
+            </div>
+          </div>
+          <button class="card__episode-button" data-ref="increment">+</button>
+        </div>
+      </div>`;
+
+    return toHtml(template);
   };
 
   const incrementEpisode = function() {
@@ -612,8 +229,7 @@ function card({ virtualDom, bus }, refElement, anime) {
       return;
 
     state.currentEpisode = state.currentEpisode + 1;
-
-    rootNode.querySelector('[data-ref="input"]').value = state.currentEpisode;
+    updateCard();
 
     bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
   };
@@ -624,55 +240,71 @@ function card({ virtualDom, bus }, refElement, anime) {
 
     state.currentEpisode = state.currentEpisode - 1;
 
-    rootNode.querySelector('[data-ref="input"]').value = state.currentEpisode;
-
+    updateCard();
     bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
   };
 
   const changeEpisode = function(event) {
-    console.log(event.target.value);
     state.currentEpisode = parseInt(event.target.value);
+
+    updateCard();
     bus.emit('anime:currentEpisodeChanged', { id: state.id, currentEpisode: state.currentEpisode });
   };
 
-  const render = function() {
-    tree = cardTemplate(state);
-    rootNode = virtualDom.createElement(tree);
-    refElement.appendChild(rootNode);
-
-    // Event listeners
-    rootNode.querySelector('[data-ref="increment"]').addEventListener('click', incrementEpisode);
-    rootNode.querySelector('[data-ref="decrement"]').addEventListener('click', decrementEpisode);
-    rootNode.querySelector('[data-ref="input"]').addEventListener('change', changeEpisode);
+  const updateCard = function() {
+    elements.input.value = state.currentEpisode;
+    elements.currentEpisode.textContent = state.currentEpisode;
+    elements.episodeCount.textContent = anime.episodeCount ? anime.episodeCount : '??';
+    elements.image.src = state.image;
+    elements.image.alt = state.title;
+    elements.title.textContent = state.title;
   };
 
-  const update = function() {
-    const newTree = cardTemplate(state);
-    const patches = virtualDom.diff(tree, newTree);
-    rootNode = virtualDom.patch(rootNode, patches);
-    tree = newTree;
+  const render = function() {
+    if (refElement.firstElementChild) {
+      refElement.firstElementChild.remove();
+    }
+
+    rootNode = cardTemplate(state);
+
+    // Event listeners
+    elements.currentEpisode = rootNode.querySelector('[data-ref="currentEpisode"]');
+    elements.episodeCount = rootNode.querySelector('[data-ref="episodeCount"]');
+    elements.input = rootNode.querySelector('[data-ref="input"]');
+    elements.image = rootNode.querySelector('[data-ref="image"]');
+    elements.title = rootNode.querySelector('[data-ref="title"]');
+
+    rootNode.querySelector('[data-ref="increment"]').addEventListener('click', incrementEpisode);
+    rootNode.querySelector('[data-ref="decrement"]').addEventListener('click', decrementEpisode);
+    elements.input.addEventListener('change', changeEpisode);
+
+    refElement.appendChild(rootNode);
   };
 
   const state = setState(anime);
 
+  const updateState = function(newState) {
+    Object.assign(state, newState);
+  };
+
   // Whenever an anime:changed event is fire with the id of this card
   // update the state of the card.
   bus.when('anime:changed', { id: anime.id }, function(newState) {
-    blockChangeEvent = true;
     // Copy the newState's properties on the current state.
-    Object.assign(state, newState);
-    blockChangeEvent = false;
+    updateState(newState);
+    updateCard();
   });
 
   return {
     state,
+    updateCard,
     render
   };
 };
 
 
 /***/ }),
-/* 17 */
+/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -680,27 +312,18 @@ function card({ virtualDom, bus }, refElement, anime) {
 
 
 function cardContainer(services, card, refElement, list) {
-  let nodes = [];
-  let state = list;
-  let loaded = 0;
+  let data = list.slice();
+  let renderedCards = [];
+  let state = data;
   const loadLimit = 32;
   let containerHeight = 0;
   let windowHeight = window.innerHeight;
 
-  // Event Listeners
-  const handleLoadingOfNextStateOnScroll = function(event) {
-    if (loaded >= state.length) {
-      return;
-    }
-
-    const distance = containerHeight - (window.scrollY + windowHeight);
-
-    if (distance < containerHeight / 2) {
-      renderNextStatePartial();
-    }
+  const filters = {
+    status: 'watching',
+    season: 'all',
+    year: 'all',
   };
-  window.addEventListener('scroll', handleLoadingOfNextStateOnScroll, { passive: true });
-  window.addEventListener('resize', () => { windowHeight = window.innerHeight }, { passive: true });
 
   const seasons = {
     winter: 0, // Jan starts at 0
@@ -721,10 +344,35 @@ function cardContainer(services, card, refElement, list) {
   const summerSeason = item => (new Date(item.starts)).getMonth() == seasons.summer;
   const fallSeason = item => (new Date(item.starts)).getMonth() == seasons.fall;
 
-  const filter = function(status = 'watching', season = 'all', year = 'all') {
-    let filtered = list.slice(0);
+  // Event Listeners
+  const handleLoadingOfNextStateOnScroll = function(event) {
+    if (renderedCards.length >= state.length) {
+      return;
+    }
 
-    switch(status) {
+    const distance = containerHeight - (window.scrollY + windowHeight);
+
+    if (distance < containerHeight / 2) {
+      renderNextStatePartial();
+    }
+  };
+  window.addEventListener('scroll', handleLoadingOfNextStateOnScroll, { passive: true });
+  window.addEventListener('resize', () => { windowHeight = window.innerHeight }, { passive: true });
+
+  const filter = function(status = 'watching', season = 'all', year = 'all') {
+    filters.status = status;
+    filters.season = season;
+    filters.year = year;
+
+    const sortedData = sortData(data);
+    const filteredData = filterData(sortedData);
+    state = filteredData;
+  };
+
+  const filterData = function(dataToFilter) {
+    let filtered = dataToFilter.slice();
+
+    switch(filters.status) {
       case 'watching':
         filtered = filtered.filter(watching);
         break;
@@ -747,7 +395,7 @@ function cardContainer(services, card, refElement, list) {
         throw new Error(`Unrecognized filter "${status}"`);
     }
 
-    switch(season) {
+    switch(filters.season) {
       case 'winter':
         filtered = filtered.filter(winterSeason);
         break;
@@ -767,16 +415,16 @@ function cardContainer(services, card, refElement, list) {
         throw new Error(`Unrecognized filter "${season}"`);
     }
 
-    if (year !== 'all') {
-      year = parseInt(year, 10);
-      filtered = filtered.filter(item => ( new Date(item.starts)).getFullYear() === year);
+    if (filters.year !== 'all') {
+      filters.year = parseInt(filters.year, 10);
+      filtered = filtered.filter(item => ( new Date(item.starts)).getFullYear() === filters.year);
     }
 
-    return state = filtered;
+    return filtered;
   };
 
-  const sort = function() {
-    const sortedByStatus = state.slice().sort((a, b) => {
+  const sortData = function(dataToSort) {
+    const sortedByStatus = dataToSort.slice().sort((a, b) => {
       if (a.status > b.status) {
         return 1;
       }
@@ -814,19 +462,17 @@ function cardContainer(services, card, refElement, list) {
       sorted = sorted.concat(grouped[prop]);
     }
 
-    state = sorted;
+    return sorted;
   };
 
   const render = function() {
-    // If there are any remove all nodes from dom first
-    if (nodes.length) {
-      nodes.forEach(node => node.remove());
+    // If there are any remove all cards from dom first
+    if (renderedCards.length) {
+      renderedCards.forEach(({node}) => node.remove());
     }
 
     // Clear the array
-    nodes = [];
-    // Eeset amount of loaded cards
-    loaded = 0;
+    renderedCards = [];
 
     if (!state.length) {
       refElement.classList.add('isEmpty');
@@ -841,7 +487,7 @@ function cardContainer(services, card, refElement, list) {
   };
 
   const renderNextStatePartial = function() {
-    if (loaded >= state.length) {
+    if (renderedCards.length >= state.length) {
       console.info('Completely rendered state to DOM.');
       return;
     }
@@ -856,17 +502,17 @@ function cardContainer(services, card, refElement, list) {
       const node = document.createElement('li');
       const animeCard = card(services, node, anime);
       animeCard.render();
-      nodes.push(node);
+      renderedCards.push({ instance: animeCard, id: animeCard.state.id, node});
     });
 
-    // Append all nodes to dom after creating the nodes
+    // Append all cards to dom after creating the cards
     // this prevents a read, write, read, write cycle
-    nodes.forEach(node => refElement.appendChild(node));
+    renderedCards.forEach(({node}) => refElement.appendChild(node));
   };
 
   const getStateToLoad = function() {
+    const loaded = renderedCards.length;
     const slicedState = state.slice(loaded, loaded + loadLimit);
-    loaded = loaded + loadLimit;
     return slicedState;
   };
 
@@ -874,9 +520,22 @@ function cardContainer(services, card, refElement, list) {
     containerHeight = refElement.offsetTop + refElement.offsetHeight;
   };
 
+  const updateState = function(newState) {
+    console.info('updateState: Updating to new state.');
+    data = newState.slice();
+
+    const sortedData = sortData(data);
+    const filteredData = filterData(sortedData);
+
+    state = filteredData;
+
+    render();
+  };
+
   return {
-    sort,
     filter,
+    state,
+    updateState,
     render,
     renderNextStatePartial
   };
@@ -884,13 +543,13 @@ function cardContainer(services, card, refElement, list) {
 
 
 /***/ }),
-/* 18 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__card__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cardContainer__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__actions__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__card__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__cardContainer__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__actions__ = __webpack_require__(1);
 /* harmony export (immutable) */ __webpack_exports__["a"] = core;
 
 
@@ -898,7 +557,7 @@ function cardContainer(services, card, refElement, list) {
 
 
 
-async function core(services) {
+function core(services) {
   console.info('initialize with ', services);
 
   const provider = services.providers.mal;
@@ -918,7 +577,7 @@ async function core(services) {
     prompt = true;
   }
 
-  let list;
+  let list = [];
 
   if (cachedList) {
     console.info('Using cached list.');
@@ -940,7 +599,6 @@ async function core(services) {
   document.querySelector('[data-filter-status="'+ status +'"]').classList.add('active');
   filterAllSeasons.classList.add('active');
 
-
   const handleFilterCurrentSeasonClick = function(event) {
     filterAllSeasons.classList.remove('active');
     event.target.classList.add('active');
@@ -949,7 +607,6 @@ async function core(services) {
     year = 2017;
 
     container.filter(status, season, year);
-    container.sort();
     container.render();
   };
 
@@ -960,8 +617,7 @@ async function core(services) {
     season = 'all';
     year = 'all';
 
-    container.filter(status, 'all', year);
-    container.sort();
+    container.filter(status, season, year);
     container.render();
   };
 
@@ -972,7 +628,6 @@ async function core(services) {
     event.target.classList.add('active');
 
     container.filter(status, season, year);
-    container.sort();
     container.render();
   };
 
@@ -983,19 +638,22 @@ async function core(services) {
 
   if (cachedList) {
     container.filter(status, season, year);
-    container.sort();
     container.render();
   }
 
-  window.container = container;
+  services.providers.mal.list.get().then(data => {
+    // console.info('Fetched list from provider.');
 
-  // services.providers.mal.list.get().then(data => {
-  //   console.info('Fetched list from provider.');
-  //   list = data;
-  //   services.storage.setItem('app.list', JSON.stringify(data));
+    // console.log(data.length, list.length);
+    // // Update the container state list only if there are changes
+    // const json = JSON.stringify(data);
+    // if (cachedList !== json) {
+    //   container.updateState(data);
+    //   // Recache list.
+    //   services.storage.setItem('app.list', json);
+    // }
 
-  //   // Re-render
-  // });
+  });
 
   // console.log('Checking if logged in...');
   // If not prompt log in -> store credentials if remember is on.
@@ -1005,13 +663,34 @@ async function core(services) {
 
 
 /***/ }),
-/* 19 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 
-const list =  [
+const list = [
+      {
+         "series_animedb_id": "19",
+         "series_title": "Monster",
+         "series_synonyms": "; Monster",
+         "series_type": "1",
+         "series_episodes": "74",
+         "series_status": "2",
+         "series_start": "2004-04-07",
+         "series_end": "2005-09-28",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/18793.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "3",
+         "my_start_date": "2016-02-04",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1454595869",
+         "my_tags": []
+      },
       {
          "series_animedb_id": "26",
          "series_title": "Texhnolyze",
@@ -1034,6 +713,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "33",
+         "series_title": "Berserk",
+         "series_synonyms": "Kenpuu Denki Berserk; Kenfu Denki Berserk; Sword-Wind Chronicle Berserk; Berserk",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "1997-10-08",
+         "series_end": "1998-04-01",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/18520.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "25",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673549",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "57",
+         "series_title": "Beck",
+         "series_synonyms": "BECK; Beck: Mongolian Chop Squad",
+         "series_type": "1",
+         "series_episodes": "26",
+         "series_status": "2",
+         "series_start": "2004-10-07",
+         "series_end": "2005-03-31",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/11636.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472397058",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "67",
          "series_title": "Basilisk: Kouga Ninpou Chou",
          "series_synonyms": "Basilisk: Koga Nimpo Cho; Basilisk",
@@ -1052,6 +773,90 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1453023127",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "80",
+         "series_title": "Mobile Suit Gundam",
+         "series_synonyms": "Kidou Senshi Gundam; First Gundam; Mobile Suit Gundam: 0079; MSG; Mobile Suit Gundam",
+         "series_type": "1",
+         "series_episodes": "43",
+         "series_status": "2",
+         "series_start": "1979-04-07",
+         "series_end": "1980-01-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/12453.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "6",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673761",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "90",
+         "series_title": "Mobile Suit Gundam Wing",
+         "series_synonyms": "Shin Kidou Senki Gundam Wing; Mobile Suit Gundam Wing",
+         "series_type": "1",
+         "series_episodes": "49",
+         "series_status": "2",
+         "series_start": "1995-04-07",
+         "series_end": "1996-03-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/6613.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "49",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673700",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "121",
+         "series_title": "Fullmetal Alchemist",
+         "series_synonyms": "Hagane no Renkinjutsushi; FMA; Full Metal Alchemist; Fullmetal Alchemist",
+         "series_type": "1",
+         "series_episodes": "51",
+         "series_status": "2",
+         "series_start": "2003-10-04",
+         "series_end": "2004-10-02",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/75815.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "51",
+         "my_start_date": "2016-05-03",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462478531",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "164",
+         "series_title": "Mononoke Hime",
+         "series_synonyms": "Mononoke Hime; Princess Mononoke",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "1997-07-12",
+         "series_end": "1997-07-12",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/7/75919.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1483023318",
          "my_tags": []
       },
       {
@@ -1094,6 +899,69 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1471115793",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "269",
+         "series_title": "Bleach",
+         "series_synonyms": "; Bleach",
+         "series_type": "1",
+         "series_episodes": "366",
+         "series_status": "2",
+         "series_start": "2004-10-05",
+         "series_end": "2012-03-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/40451.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "366",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673485",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "430",
+         "series_title": "Fullmetal Alchemist: The Conqueror of Shamballa",
+         "series_synonyms": "Gekijyouban Hagane no Renkinjutsushi - Shanbara wo Yuku Mono; Fullmetal Alchemist the Movie: Conqueror of Shamballa; FMA Movie; Fullmetal Alchemist: The Movie - Conqueror of Shamballa",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2005-07-23",
+         "series_end": "2005-07-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/20113.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462478510",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "431",
+         "series_title": "Howl no Ugoku Shiro",
+         "series_synonyms": "; Howl's Moving Castle",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2004-11-20",
+         "series_end": "2004-11-20",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/75810.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474496229",
          "my_tags": []
       },
       {
@@ -1160,6 +1028,69 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "512",
+         "series_title": "Majo no Takkyuubin",
+         "series_synonyms": "Witch's Express Delivery; Kiki's Delivery Service",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "1989-07-29",
+         "series_end": "1989-07-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/75916.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1471099901",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "523",
+         "series_title": "Tonari no Totoro",
+         "series_synonyms": "My Neighbour Totoro; My Neighbor Totoro",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "1988-04-16",
+         "series_end": "1988-04-16",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/75923.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1483023305",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "777",
+         "series_title": "Hellsing Ultimate",
+         "series_synonyms": "; Hellsing Ultimate",
+         "series_type": "2",
+         "series_episodes": "10",
+         "series_status": "2",
+         "series_start": "2006-02-10",
+         "series_end": "2012-12-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/7333.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "10",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "2016-01-27",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1453892114",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "849",
          "series_title": "Suzumiya Haruhi no Yuuutsu",
          "series_synonyms": "Suzumiya Haruhi no Yuuutsu; The Melancholy of Haruhi Suzumiya",
@@ -1202,6 +1133,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "934",
+         "series_title": "Higurashi no Naku Koro ni",
+         "series_synonyms": "When the Cicadas Cry; The Moment the Cicadas Cry; When They Cry",
+         "series_type": "1",
+         "series_episodes": "26",
+         "series_status": "2",
+         "series_start": "2006-04-05",
+         "series_end": "2006-09-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/19634.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1469814052",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "1482",
          "series_title": "D.Gray-man",
          "series_synonyms": "D. Gray-man; D. Grey-man; D.Gray-man",
@@ -1220,6 +1172,48 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1469296500",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "1535",
+         "series_title": "Death Note",
+         "series_synonyms": "DN; Death Note",
+         "series_type": "1",
+         "series_episodes": "37",
+         "series_status": "2",
+         "series_start": "2006-10-04",
+         "series_end": "2007-06-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/9453.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "37",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "2016-01-23",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1453583038",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "1575",
+         "series_title": "Code Geass: Hangyaku no Lelouch",
+         "series_synonyms": "Code Geass: Hangyaku no Lelouch; Code Geass: Lelouch of the Rebellion",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2006-10-06",
+         "series_end": "2007-07-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/50331.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1460204350",
          "my_tags": []
       },
       {
@@ -1265,6 +1259,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "1887",
+         "series_title": "Lucky☆Star",
+         "series_synonyms": "Lucky Star; Lucky☆Star",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2007-04-08",
+         "series_end": "2007-09-17",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/15010.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "24",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1481661911",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "2001",
+         "series_title": "Tengen Toppa Gurren Lagann",
+         "series_synonyms": "Tengen Toppa Gurren-Lagann; Making Break-Through Gurren Lagann; Heavenly Breakthrough Gurren Lagann; TTGL; Gurren Lagann",
+         "series_type": "1",
+         "series_episodes": "27",
+         "series_status": "2",
+         "series_start": "2007-04-01",
+         "series_end": "2007-09-30",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/5123.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "6",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462107351",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "2025",
          "series_title": "Darker than Black: Kuro no Keiyakusha",
          "series_synonyms": "DTB; Darker than Black",
@@ -1307,27 +1343,6 @@ const list =  [
          "my_tags": []
       },
       {
-         "series_animedb_id": "2154",
-         "series_title": "Tekkon Kinkreet",
-         "series_synonyms": "Tekkon Kinkreet (2006); Black & White; Tekkon Kinkurito; Tekkon Kin Creat; Tekkonkinkreet",
-         "series_type": "3",
-         "series_episodes": "1",
-         "series_status": "2",
-         "series_start": "2006-12-23",
-         "series_end": "2006-12-23",
-         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/8520.jpg",
-         "my_id": "0",
-         "my_watched_episodes": "0",
-         "my_start_date": "0000-00-00",
-         "my_finish_date": "0000-00-00",
-         "my_score": "0",
-         "my_status": "1",
-         "my_rewatching": "0",
-         "my_rewatching_ep": "0",
-         "my_last_updated": "1482005460",
-         "my_tags": []
-      },
-      {
          "series_animedb_id": "2236",
          "series_title": "Toki wo Kakeru Shoujo",
          "series_synonyms": "Toki wo Kakeru Shojo; TokiKake; Toki o Kakeru Shojo; The Girl Who Cut Time; The Little Girl Who Conquered Time; The Girl Who Leapt Through Time",
@@ -1346,6 +1361,69 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1460790238",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "2251",
+         "series_title": "Baccano!",
+         "series_synonyms": "; Baccano!",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2007-07-27",
+         "series_end": "2007-11-02",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/14547.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462037464",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "2581",
+         "series_title": "Mobile Suit Gundam 00",
+         "series_synonyms": "Kidou Senshi Gundam 00; Gundam Double O; Mobile Suit Gundam 00",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2007-10-06",
+         "series_end": "2008-03-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/13200.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "25",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673712",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "2963",
+         "series_title": "Minami-ke",
+         "series_synonyms": "Minamike; The Minami Family",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2007-10-08",
+         "series_end": "2007-12-31",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/75279.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1481380122",
          "my_tags": []
       },
       {
@@ -1388,6 +1466,48 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1481380239",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "3455",
+         "series_title": "To LOVE-Ru",
+         "series_synonyms": "To Love You; ToLoveRu; ToLoveRu Trouble; To-Rabu-Ru; ToRaBuRu; To LOVE Ru",
+         "series_type": "1",
+         "series_episodes": "26",
+         "series_status": "2",
+         "series_start": "2008-04-04",
+         "series_end": "2008-09-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/22544.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1460790000",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "3588",
+         "series_title": "Soul Eater",
+         "series_synonyms": "SOUL EATER; Soul Eater",
+         "series_type": "1",
+         "series_episodes": "51",
+         "series_status": "2",
+         "series_start": "2008-04-07",
+         "series_end": "2009-03-30",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/7804.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "51",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1475257246",
          "my_tags": []
       },
       {
@@ -1454,6 +1574,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "4472",
+         "series_title": "Lucky☆Star: Original na Visual to Animation",
+         "series_synonyms": "Lucky Star OVA",
+         "series_type": "2",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2008-09-26",
+         "series_end": "2008-09-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/22582.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1481661926",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "4896",
          "series_title": "Umineko no Naku Koro ni",
          "series_synonyms": "When They Cry 3; When the Seagulls Cry; When They Cry: Seagulls; Umineko: When They Cry",
@@ -1472,6 +1613,48 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1469814107",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "4898",
+         "series_title": "Kuroshitsuji",
+         "series_synonyms": "Kuro Shitsuji; Kuroshitsuzi; Black Butler",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2008-10-03",
+         "series_end": "2009-03-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/27013.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "24",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470959050",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "5081",
+         "series_title": "Bakemonogatari",
+         "series_synonyms": "Ghostory; Bakemonogatari",
+         "series_type": "1",
+         "series_episodes": "15",
+         "series_status": "2",
+         "series_start": "2009-07-03",
+         "series_end": "2010-06-25",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/75274.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "15",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1460406670",
          "my_tags": []
       },
       {
@@ -1514,6 +1697,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1453553502",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "5680",
+         "series_title": "K-On!",
+         "series_synonyms": "Keion; K-ON! Season 1; K-ON!",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2009-04-03",
+         "series_end": "2009-06-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/76120.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472295122",
          "my_tags": []
       },
       {
@@ -1727,6 +1931,69 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "6862",
+         "series_title": "K-On!: Live House!",
+         "series_synonyms": "K-On! OVA; Keion OVA; K-On! Episode 14; Keion OVA",
+         "series_type": "4",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2010-01-19",
+         "series_end": "2010-01-19",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/15892.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472295117",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "6880",
+         "series_title": "Deadman Wonderland",
+         "series_synonyms": "DEADMAN WONDERLAND; Deadman Wonderland",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2011-04-17",
+         "series_end": "2011-07-03",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/75299.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "2016-01-17",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1453064903",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "6956",
+         "series_title": "Working!!",
+         "series_synonyms": "Working!!; Wagnaria!!",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2010-04-04",
+         "series_end": "2010-06-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/75262.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470126200",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "7647",
          "series_title": "Arakawa Under the Bridge",
          "series_synonyms": "; Arakawa Under the Bridge",
@@ -1787,6 +2054,69 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1471886965",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "7791",
+         "series_title": "K-On!!",
+         "series_synonyms": "Keion 2; K-On!! 2nd Season; K-ON! Season 2",
+         "series_type": "1",
+         "series_episodes": "26",
+         "series_status": "2",
+         "series_start": "2010-04-07",
+         "series_end": "2010-09-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/76121.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "26",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472834336",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "8457",
+         "series_title": "Yozakura Quartet: Hoshi no Umi",
+         "series_synonyms": [],
+         "series_type": "2",
+         "series_episodes": "3",
+         "series_status": "2",
+         "series_start": "2010-10-08",
+         "series_end": "2011-11-09",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/27779.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "3",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477298057",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "8769",
+         "series_title": "Ore no Imouto ga Konnani Kawaii Wake ga Nai",
+         "series_synonyms": "My Little Sister Can't Be This Cute; OreImo",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2010-10-03",
+         "series_end": "2010-12-19",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/24875.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477561196",
          "my_tags": []
       },
       {
@@ -1874,6 +2204,90 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "9617",
+         "series_title": "K-On! Movie",
+         "series_synonyms": "Eiga K-On!; Keion Movie; K-ON! The Movie",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2011-12-03",
+         "series_end": "2011-12-03",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/76233.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472672979",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "9734",
+         "series_title": "K-On!!: Keikaku!",
+         "series_synonyms": "Keion 2 Special; K-On!! 2nd Season Special; K-On!! Episode 27",
+         "series_type": "4",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2011-03-16",
+         "series_end": "2011-03-16",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/7/26965.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472672993",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "9756",
+         "series_title": "Mahou Shoujo Madoka★Magica",
+         "series_synonyms": "Mahou Shoujo Madoka Magika; Magical Girl Madoka Magica; Puella Magi Madoka Magica",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2011-01-07",
+         "series_end": "2011-04-22",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/55225.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477233080",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "9919",
+         "series_title": "Ao no Exorcist",
+         "series_synonyms": "Ao no Futsumashi; Blue Exorcist",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2011-04-17",
+         "series_end": "2011-10-02",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/75195.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "25",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470860975",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "9941",
          "series_title": "Tiger & Bunny",
          "series_synonyms": "Tiger and Bunny; Taibani; Tiger & Bunny",
@@ -1916,6 +2330,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "10020",
+         "series_title": "Ore no Imouto ga Konnani Kawaii Wake ga Nai Specials",
+         "series_synonyms": "My Little Sister Can't Be This Cute Specials; OreImo Specials",
+         "series_type": "5",
+         "series_episodes": "4",
+         "series_status": "2",
+         "series_start": "2011-02-22",
+         "series_end": "2011-05-31",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/29734.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "4",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477663093",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "10087",
          "series_title": "Fate/Zero",
          "series_synonyms": "; Fate/Zero",
@@ -1934,6 +2369,69 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1473282881",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "10162",
+         "series_title": "Usagi Drop",
+         "series_synonyms": "Usagi Drop; Bunny Drop",
+         "series_type": "1",
+         "series_episodes": "11",
+         "series_status": "2",
+         "series_start": "2011-07-08",
+         "series_end": "2011-09-16",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/29665.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "11",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474214991",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "10165",
+         "series_title": "Nichijou",
+         "series_synonyms": "Everyday; Nichijou - My Ordinary Life",
+         "series_type": "1",
+         "series_episodes": "26",
+         "series_status": "2",
+         "series_start": "2011-04-03",
+         "series_end": "2011-09-25",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/75617.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "26",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1461098641",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "10216",
+         "series_title": "Yondemasu yo, Azazel-san. (TV)",
+         "series_synonyms": "Yondemasu yo, Azazel-san. (2011); You're Being Summoned, Azazel",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2011-04-08",
+         "series_end": "2011-07-01",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/75284.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1468482399",
          "my_tags": []
       },
       {
@@ -1958,6 +2456,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "10357",
+         "series_title": "Jinrui wa Suitai Shimashita",
+         "series_synonyms": "Jintai; Humanity Has Declined",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2012-07-02",
+         "series_end": "2012-09-17",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/45704.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1479594504",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "10389",
          "series_title": "Momo e no Tegami",
          "series_synonyms": "Momo e no Tegami; A Letter to Momo",
@@ -1976,6 +2495,111 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1473022341",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "10495",
+         "series_title": "Yuru Yuri",
+         "series_synonyms": "YRYR; YuruYuri: Happy Go Lily",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2011-07-05",
+         "series_end": "2011-09-20",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/52921.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473237320",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "10521",
+         "series_title": "Working'!!",
+         "series_synonyms": "Working!! 2; Wagnaria!!2",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2011-10-01",
+         "series_end": "2011-12-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/75263.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470321869",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "10620",
+         "series_title": "Mirai Nikki (TV)",
+         "series_synonyms": "Mirai Nikki; Mirai Nikki (2011); The Future Diary",
+         "series_type": "1",
+         "series_episodes": "26",
+         "series_status": "2",
+         "series_start": "2011-10-09",
+         "series_end": "2012-04-15",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/33465.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "26",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1460789983",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "10711",
+         "series_title": "Plastic Neesan",
+         "series_synonyms": "+tic Nee-san; +tic Elder Sister; Plustic Neesan; Plastic Nee-san; Purasu Chikku Neesan; Plastic Elder Sister",
+         "series_type": "5",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2011-05-16",
+         "series_end": "2012-07-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/76583.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1481983600",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "10721",
+         "series_title": "Mawaru Penguindrum",
+         "series_synonyms": "; Penguindrum",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2011-07-08",
+         "series_end": "2011-12-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/30238.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "2",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477344651",
          "my_tags": []
       },
       {
@@ -2042,6 +2666,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "11597",
+         "series_title": "Nisemonogatari",
+         "series_synonyms": "Impostory; Nisemonogatari",
+         "series_type": "1",
+         "series_episodes": "11",
+         "series_status": "2",
+         "series_start": "2012-01-08",
+         "series_end": "2012-03-18",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/35619.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "11",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1460406719",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "11633",
+         "series_title": "Blood Lad",
+         "series_synonyms": "; Blood Lad",
+         "series_type": "1",
+         "series_episodes": "10",
+         "series_status": "2",
+         "series_start": "2013-07-08",
+         "series_end": "2013-09-09",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/47677.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "10",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472073757",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "11741",
          "series_title": "Fate/Zero 2nd Season",
          "series_synonyms": "Fate/Zero Second Season; Fate/Zero Season 2",
@@ -2084,6 +2750,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "11771",
+         "series_title": "Kuroko no Basket",
+         "series_synonyms": "Kuroko no Basuke; Kuroko's Basketball",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2012-04-08",
+         "series_end": "2012-09-22",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/50453.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1475264123",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "11843",
          "series_title": "Danshi Koukousei no Nichijou",
          "series_synonyms": "Danshi Koukousei no Nichijou; Daily Lives of High School Boys",
@@ -2123,6 +2810,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1483456924",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "12189",
+         "series_title": "Hyouka",
+         "series_synonyms": "Hyou-ka; Hyouka: You can't escape; Hyou-ka: You can't escape; Hyoka",
+         "series_type": "1",
+         "series_episodes": "22",
+         "series_status": "2",
+         "series_start": "2012-04-23",
+         "series_end": "2012-09-17",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/50521.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "22",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482003948",
          "my_tags": []
       },
       {
@@ -2210,6 +2918,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "13469",
+         "series_title": "Hyouka: Motsubeki Mono wa",
+         "series_synonyms": "Hyouka Episode 11.5; Hyouka OVA; Hyou-ka OVA; Hyouka: You can't escape OVA; Hyou-ka: You can't escape OVA; Hyoka OVA",
+         "series_type": "2",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2012-07-08",
+         "series_end": "2012-07-08",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/50363.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1481828610",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "13601",
          "series_title": "Psycho-Pass",
          "series_synonyms": "Psychopath; Psycho-Pass",
@@ -2228,6 +2957,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1454588822",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "13659",
+         "series_title": "Ore no Imouto ga Konnani Kawaii Wake ga Nai.",
+         "series_synonyms": "My Little Sister Can't Be This Cute 2; Ore no Imouto ga Konna ni Kawaii Wake ga Nai 2; Oreimo 2",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2013-04-07",
+         "series_end": "2013-06-30",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/45769.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477695981",
          "my_tags": []
       },
       {
@@ -2294,6 +3044,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "14349",
+         "series_title": "Little Witch Academia",
+         "series_synonyms": "Wakate Animator Ikusei Project; 2012 Young Animator Training Project; Anime Mirai 2012; LWA",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2013-03-02",
+         "series_end": "2013-03-02",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/42989.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474574536",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "14467",
          "series_title": "K",
          "series_synonyms": "K-Project; K -eine weitere Geschichte-; K",
@@ -2333,6 +3104,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1470859617",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "14741",
+         "series_title": "Chuunibyou demo Koi ga Shitai!",
+         "series_synonyms": "Chu-2 Byo demo Koi ga Shitai!; Regardless of My Adolescent Delusions of Grandeur, I Want a Date!; Love, Chunibyo & Other Delusions!",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2012-10-04",
+         "series_end": "2012-12-20",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/46931.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462230353",
          "my_tags": []
       },
       {
@@ -2399,6 +3191,90 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "15315",
+         "series_title": "Mondaiji-tachi ga Isekai kara Kuru Sou Desu yo?",
+         "series_synonyms": "Mondaiji-tachi ga Isekai kara Kuru Sou Desu yo?; Problem children are coming from another world, aren't they?",
+         "series_type": "1",
+         "series_episodes": "10",
+         "series_status": "2",
+         "series_start": "2013-01-12",
+         "series_end": "2013-03-16",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/43369.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "10",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1468964684",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "15689",
+         "series_title": "Nekomonogatari: Kuro",
+         "series_synonyms": "Nekomonogatari Black: Tsubasa Family; Nekomonogatari Black",
+         "series_type": "1",
+         "series_episodes": "4",
+         "series_status": "2",
+         "series_start": "2012-12-31",
+         "series_end": "2012-12-31",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/59247.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "4",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1460406748",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "15809",
+         "series_title": "Hataraku Maou-sama!",
+         "series_synonyms": "Hataraku Maou-sama!; The Devil is a Part-Timer!",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2013-04-04",
+         "series_end": "2013-06-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/50177.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470606202",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "15911",
+         "series_title": "Yuyushiki",
+         "series_synonyms": "Yuyu-shiki; Yuyushiki",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2013-04-10",
+         "series_end": "2013-06-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/48747.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482872977",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "16067",
          "series_title": "Nagi no Asukara",
          "series_synonyms": "Nagi no Asu Kara; Earth color of a calm; Nagiasu; A Lull in the Sea",
@@ -2417,6 +3293,90 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1470961854",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "16241",
+         "series_title": "Yondemasu yo, Azazel-san. Z",
+         "series_synonyms": "Yondemasu yo, Azazel-san. 2nd Season; You're Being Summoned, Azazel Z",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2013-04-07",
+         "series_end": "2013-06-30",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/48957.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1468505194",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "16353",
+         "series_title": "Love Lab",
+         "series_synonyms": "Renai Lab; Love Lab",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2013-07-05",
+         "series_end": "2013-09-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/50257.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1481054964",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "16417",
+         "series_title": "Tamako Market",
+         "series_synonyms": "; Tamako Market",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2013-01-10",
+         "series_end": "2013-03-28",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/79594.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473237309",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "16498",
+         "series_title": "Shingeki no Kyojin",
+         "series_synonyms": "AoT; Attack on Titan",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2013-04-07",
+         "series_end": "2013-09-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/47347.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "25",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452968066",
          "my_tags": []
       },
       {
@@ -2441,6 +3401,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "16732",
+         "series_title": "Kiniro Mosaic",
+         "series_synonyms": "Kinmosa; Golden Mosaic; KINMOZA!",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2013-07-06",
+         "series_end": "2013-09-21",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/51379.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482875952",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "16742",
          "series_title": "Watashi ga Motenai no wa Dou Kangaetemo Omaera ga Warui!",
          "series_synonyms": "Watashi ga Motenai no wa Dou Kangaete mo Omaera ga Warui!; It's Not My Fault That I'm Not Popular!; WataMote; WataMote: No Matter How I Look At It, It's You Guys' Fault I'm Unpopular!",
@@ -2459,6 +3440,48 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1483388945",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "16762",
+         "series_title": "Mirai Nikki Redial",
+         "series_synonyms": "Mirai Nikki OVA; The Future Diary Redial",
+         "series_type": "2",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2013-06-19",
+         "series_end": "2013-06-19",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/53247.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "2016-04-16",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1460808633",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "16782",
+         "series_title": "Kotonoha no Niwa",
+         "series_synonyms": "Koto no Ha no Niwa; The Garden of Kotonoha; The Garden of Words",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2013-05-31",
+         "series_end": "2013-05-31",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/79676.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477237173",
          "my_tags": []
       },
       {
@@ -2483,6 +3506,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "17074",
+         "series_title": "Monogatari Series: Second Season",
+         "series_synonyms": "Nekomonogatari: Shiro; Kabukimonogatari: Mayoi Jianshi; Otorimonogatari; Onimonogatari; Koimonogatari; Monogatari Series: Second Season",
+         "series_type": "1",
+         "series_episodes": "26",
+         "series_status": "2",
+         "series_start": "2013-07-07",
+         "series_end": "2013-12-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/52133.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "26",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462045729",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "17082",
+         "series_title": "Aiura",
+         "series_synonyms": "; Aiura",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2013-04-10",
+         "series_end": "2013-06-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/60699.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482017066",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "17265",
          "series_title": "Log Horizon",
          "series_synonyms": "; Log Horizon",
@@ -2501,6 +3566,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1452673637",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "17549",
+         "series_title": "Non Non Biyori",
+         "series_synonyms": "; Non Non Biyori",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2013-10-08",
+         "series_end": "2013-12-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/51581.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1461347242",
          "my_tags": []
       },
       {
@@ -2525,6 +3611,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "18119",
+         "series_title": "Servant x Service",
+         "series_synonyms": "; Servant x Service",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2013-07-05",
+         "series_end": "2013-09-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/51579.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470126562",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "18153",
          "series_title": "Kyoukai no Kanata",
          "series_synonyms": "Beyond the Horizon; Kyokai no Kanata; Beyond the Boundary",
@@ -2543,6 +3650,90 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1472593036",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "18441",
+         "series_title": "Blood Lad: Wagahai wa Neko de wa Nai",
+         "series_synonyms": "; Blood Lad OVA",
+         "series_type": "2",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2013-12-04",
+         "series_end": "2013-12-04",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/52611.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472073783",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "18497",
+         "series_title": "Yozakura Quartet: Hana no Uta",
+         "series_synonyms": "Yozakura Quartet: Hana no Uta",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2013-10-06",
+         "series_end": "2013-12-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/52563.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477307180",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "18499",
+         "series_title": "Yozakura Quartet: Tsuki ni Naku",
+         "series_synonyms": [],
+         "series_type": "2",
+         "series_episodes": "3",
+         "series_status": "2",
+         "series_start": "2013-10-09",
+         "series_end": "2014-11-07",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/49489.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "3",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477307177",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "18507",
+         "series_title": "Free!",
+         "series_synonyms": "フリー！; Free! - Iwatobi Swim Club",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2013-07-04",
+         "series_end": "2013-09-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/51107.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473115776",
          "my_tags": []
       },
       {
@@ -2588,6 +3779,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "18679",
+         "series_title": "Kill la Kill",
+         "series_synonyms": "KLK; Dressed to Kill; KILL la KILL",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2013-10-04",
+         "series_end": "2014-03-28",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/75514.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "24",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1476829338",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "18897",
+         "series_title": "Nisekoi",
+         "series_synonyms": "Nisekoi; Nisekoi: False Love",
+         "series_type": "1",
+         "series_episodes": "20",
+         "series_status": "2",
+         "series_start": "2014-01-11",
+         "series_end": "2014-05-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/75587.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "20",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1483185753",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "19369",
          "series_title": "Outbreak Company",
          "series_synonyms": "; Outbreak Company",
@@ -2606,6 +3839,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1473757576",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "19489",
+         "series_title": "Little Witch Academia: Mahoujikake no Parade",
+         "series_synonyms": "LWA 2; Little Witch Academia 2; Little Witch Academia: The Enchanted Parade",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2015-10-09",
+         "series_end": "2015-10-09",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/75752.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484171240",
          "my_tags": []
       },
       {
@@ -2630,6 +3884,69 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "19815",
+         "series_title": "No Game No Life",
+         "series_synonyms": "NGNL; No Game, No Life",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-04-09",
+         "series_end": "2014-06-25",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/65187.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "2016-02-04",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1454595847",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "20031",
+         "series_title": "D-Frag!",
+         "series_synonyms": "D-Frag!; D-Frag!",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-01-07",
+         "series_end": "2014-03-25",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/53407.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482348154",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "20047",
+         "series_title": "Sakura Trick",
+         "series_synonyms": "; Sakura Trick",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-01-10",
+         "series_end": "2014-03-28",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/56189.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1480343647",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "20057",
          "series_title": "Space☆Dandy",
          "series_synonyms": "; Space Dandy",
@@ -2648,6 +3965,90 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1471115738",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "20507",
+         "series_title": "Noragami",
+         "series_synonyms": "Stray God; Noragami",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-01-05",
+         "series_end": "2014-03-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/77809.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1461840311",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "20541",
+         "series_title": "Mikakunin de Shinkoukei",
+         "series_synonyms": "; Engaged to the Unidentified",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-01-09",
+         "series_end": "2014-03-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/75249.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477425115",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "20583",
+         "series_title": "Haikyuu!!",
+         "series_synonyms": "High Kyuu!!, HQ!!; Haikyu!!",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2014-04-06",
+         "series_end": "2014-09-21",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/7/76014.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "25",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1475503075",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "20709",
+         "series_title": "Sabagebu!",
+         "series_synonyms": "Survival Game Club!; Sabagebu! -Survival Game Club!-",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-07-06",
+         "series_end": "2014-09-21",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/60207.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482948951",
          "my_tags": []
       },
       {
@@ -2672,6 +4073,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "20973",
+         "series_title": "Sekai Seifuku: Bouryaku no Zvezda",
+         "series_synonyms": "Sekai Seifuku: Bouryaku no Zvezda; World Conquest Zvezda Plot",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-01-12",
+         "series_end": "2014-03-30",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/56133.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1479070141",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "21085",
          "series_title": "Witch Craft Works",
          "series_synonyms": "Witchcraft Works",
@@ -2690,6 +4112,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1471099945",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "21273",
+         "series_title": "Gochuumon wa Usagi Desu ka?",
+         "series_synonyms": "GochiUsa; Is the order a rabbit?",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-04-10",
+         "series_end": "2014-06-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/79600.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1468790916",
          "my_tags": []
       },
       {
@@ -2756,6 +4199,69 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "21647",
+         "series_title": "Tamako Love Story",
+         "series_synonyms": "Tamako Market Movie",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2014-04-26",
+         "series_end": "2014-04-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/60473.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473020637",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "21659",
+         "series_title": "Kill la Kill Special",
+         "series_synonyms": "Kill la Kill Tokubetsu-hen",
+         "series_type": "4",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2014-09-03",
+         "series_end": "2014-09-03",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/73654.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1476829363",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "21855",
+         "series_title": "Hanamonogatari",
+         "series_synonyms": "Monogatari Series: Second Season +α; Hanamonogatari",
+         "series_type": "1",
+         "series_episodes": "5",
+         "series_status": "2",
+         "series_start": "2014-08-16",
+         "series_end": "2014-08-16",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/65755.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "5",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462200815",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "21863",
          "series_title": "Mangaka-san to Assistant-san to The Animation",
          "series_synonyms": "Mangaka-san to Assistant-san to; ManAshi; The Comic Artist and His Assistants",
@@ -2774,6 +4280,69 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1483536446",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "22145",
+         "series_title": "Kuroshitsuji: Book of Circus",
+         "series_synonyms": "Kuroshitsuji Circus Hen; Kuroshitsuji Shin Series; Black Butler 3; Kuroshitsuji III; Black Butler: Book of Circus",
+         "series_type": "1",
+         "series_episodes": "10",
+         "series_status": "2",
+         "series_start": "2014-07-11",
+         "series_end": "2014-09-12",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/64811.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "10",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1471470977",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "22147",
+         "series_title": "Amagi Brilliant Park",
+         "series_synonyms": "Amaburi; Amagi Brilliant Park",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2014-10-07",
+         "series_end": "2014-12-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/79593.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473545148",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "22199",
+         "series_title": "Akame ga Kill!",
+         "series_synonyms": "Akame ga Kiru!; Akame ga Kill!",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2014-07-07",
+         "series_end": "2014-12-15",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/78438.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "24",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673802",
          "my_tags": []
       },
       {
@@ -2819,6 +4388,90 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "22319",
+         "series_title": "Tokyo Ghoul",
+         "series_synonyms": "Tokyo Kushu; Toukyou Kushu; Toukyou Ghoul; Tokyo Ghoul",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-07-04",
+         "series_end": "2014-09-19",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/64449.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673406",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "22535",
+         "series_title": "Kiseijuu: Sei no Kakuritsu",
+         "series_synonyms": "Parasite; Parasitic Beasts; Parasyte; Parasyte -the maxim-",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2014-10-09",
+         "series_end": "2015-03-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/73178.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "24",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "2016-01-16",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452973493",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "22789",
+         "series_title": "Barakamon",
+         "series_synonyms": "Barakamon; Barakamon",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-07-06",
+         "series_end": "2014-09-28",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/59321.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462189367",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "22839",
+         "series_title": "Cross Road",
+         "series_synonyms": "Crossroad",
+         "series_type": "4",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2014-02-25",
+         "series_end": "2014-02-25",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/59379.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477083677",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "23251",
          "series_title": "Gugure! Kokkuri-san",
          "series_synonyms": "GuguKoku; GUGURE! KOKKURI-SAN",
@@ -2837,6 +4490,48 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1483389132",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "23273",
+         "series_title": "Shigatsu wa Kimi no Uso",
+         "series_synonyms": "; Your Lie in April",
+         "series_type": "1",
+         "series_episodes": "22",
+         "series_status": "2",
+         "series_start": "2014-10-10",
+         "series_end": "2015-03-20",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/67177.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "22",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482254426",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "23283",
+         "series_title": "Zankyou no Terror",
+         "series_synonyms": "Terror in Tokyo; Terror of Resonance; Terror in Resonance",
+         "series_type": "1",
+         "series_episodes": "11",
+         "series_status": "2",
+         "series_start": "2014-07-11",
+         "series_end": "2014-09-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/64447.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "11",
+         "my_start_date": "2016-01-19",
+         "my_finish_date": "2016-01-23",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1453540546",
          "my_tags": []
       },
       {
@@ -2861,6 +4556,111 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "23399",
+         "series_title": "Minami no Shima no Dera-chan",
+         "series_synonyms": "Tamako Market; Tamako Love Story",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2014-04-26",
+         "series_end": "2014-04-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/60437.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473020628",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "23623",
+         "series_title": "Non Non Biyori Repeat",
+         "series_synonyms": "Non Non Biyori 2nd Season; Non Non Biyori Second Season; Non Non Biyori Repeat",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2015-07-07",
+         "series_end": "2015-09-22",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/75105.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462282882",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "23755",
+         "series_title": "Nanatsu no Taizai",
+         "series_synonyms": "Nanatsu no Taizai; The Seven Deadly Sins",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2014-10-05",
+         "series_end": "2015-03-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/65409.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "24",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452689381",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "23847",
+         "series_title": "Yahari Ore no Seishun Love Comedy wa Machigatteiru. Zoku",
+         "series_synonyms": "Oregairu 2; My Teen Romantic Comedy SNAFU 2; Yahari Ore no Seishun Love Comedy wa Machigatteiru. Second Season; Yahari Ore no Seishun Love Comedy wa Machigatteiru. 2nd Season; My Teen Romantic Comedy SNAFU TOO!",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2015-04-03",
+         "series_end": "2015-06-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/75376.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484087857",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "24031",
+         "series_title": "Denki-gai no Honya-san",
+         "series_synonyms": "Denki Machi no Honya-san; Denkigai no Honya-san; Denki-gai",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2014-10-02",
+         "series_end": "2014-12-18",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/65339.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470752429",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "24439",
          "series_title": "Kekkai Sensen",
          "series_synonyms": "Bloodline Battlefront; Blood Blockade Battlefront",
@@ -2879,6 +4679,48 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1480448316",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "24765",
+         "series_title": "Gakkougurashi!",
+         "series_synonyms": "Gakkou Gurashi!; School-Live!",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2015-07-09",
+         "series_end": "2015-09-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/75082.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1481381741",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "24833",
+         "series_title": "Ansatsu Kyoushitsu (TV)",
+         "series_synonyms": "Ansatsu Kyoushitsu; Assassination Classroom",
+         "series_type": "1",
+         "series_episodes": "22",
+         "series_status": "2",
+         "series_start": "2015-01-10",
+         "series_end": "2015-06-20",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/75639.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "22",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1469816613",
          "my_tags": []
       },
       {
@@ -2924,6 +4766,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "25835",
+         "series_title": "Shirobako",
+         "series_synonyms": "White Box; Shirobako",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2014-10-09",
+         "series_end": "2015-03-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/68021.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "24",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474493155",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "25859",
          "series_title": "Re-Kan!",
          "series_synonyms": "; RE-KAN!",
@@ -2966,6 +4829,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "25879",
+         "series_title": "Working!!!",
+         "series_synonyms": "Working!! 3rd Season; Working!! Third Season; Wagnaria!!3",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2015-07-05",
+         "series_end": "2015-09-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/7/73886.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470425187",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "27787",
+         "series_title": "Nisekoi:",
+         "series_synonyms": "Nisekoi 2nd Season; Nisekoi Second Season; Nisekoi: False Love",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2015-04-10",
+         "series_end": "2015-06-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/72626.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1483099078",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "27821",
          "series_title": "Fate/stay night: Unlimited Blade Works - Prologue",
          "series_synonyms": "Fate/stay night (2014) Episode 00; Fate/stay night: Unlimited Blade Works - Prologue",
@@ -2987,6 +4892,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "27989",
+         "series_title": "Hibike! Euphonium",
+         "series_synonyms": "Hibike! Euphonium; Sound! Euphonium",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2015-04-08",
+         "series_end": "2015-07-01",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/72445.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1483479587",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "28025",
          "series_title": "Tsukimonogatari",
          "series_synonyms": "Tsukimonogatari: Yotsugi Doll; Monogatari Final Season; Tsukimonogatari",
@@ -3005,6 +4931,48 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1462200854",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "28121",
+         "series_title": "Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka",
+         "series_synonyms": "DanMachi; Is It Wrong That I Want to Meet You in a Dungeon; Is It Wrong to Try to Pick Up Girls in a Dungeon?",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2015-04-04",
+         "series_end": "2015-06-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/70187.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1472928556",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "28171",
+         "series_title": "Shokugeki no Souma",
+         "series_synonyms": "Shokugeki no Soma; Food Wars: Shokugeki no Soma; Food Wars! Shokugeki no Soma",
+         "series_type": "1",
+         "series_episodes": "24",
+         "series_status": "2",
+         "series_start": "2015-04-04",
+         "series_end": "2015-09-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/72943.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "24",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1471628258",
          "my_tags": []
       },
       {
@@ -3050,6 +5018,90 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "28405",
+         "series_title": "Ansatsu Kyoushitsu (TV): Deai no Jikan",
+         "series_synonyms": "Assassination Classroom; Ansatsu Kyoushitsu (TV) Episode 0: Deai no Jikan; Ansatsu Kyoushitsu: Jump Festa 2014 Special; Assassination Classroom: Meeting Time",
+         "series_type": "4",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2014-11-09",
+         "series_end": "2014-11-09",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/68547.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1469816716",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "28623",
+         "series_title": "Koutetsujou no Kabaneri",
+         "series_synonyms": "; Kabaneri of the Iron Fortress",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-04-08",
+         "series_end": "2016-07-01",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/79164.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1468089964",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "28805",
+         "series_title": "Bakemono no Ko",
+         "series_synonyms": "; The Boy and the Beast",
+         "series_type": "3",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2015-07-11",
+         "series_end": "2015-07-11",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/73540.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "1",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484916648",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "28825",
+         "series_title": "Himouto! Umaru-chan",
+         "series_synonyms": "My Two-Faced Little Sister; Himouto! Umaru-chan",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2015-07-09",
+         "series_end": "2015-09-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/75086.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473976473",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "28851",
          "series_title": "Koe no Katachi",
          "series_synonyms": "A Silent Voice; The Shape of Voice",
@@ -3068,6 +5120,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1469611780",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "28891",
+         "series_title": "Haikyuu!! Second Season",
+         "series_synonyms": "Haikyuu!! Second Season; Haikyu!! 2nd Season",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2015-10-04",
+         "series_end": "2016-03-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/76662.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "25",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1475700300",
          "my_tags": []
       },
       {
@@ -3113,6 +5186,90 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "29758",
+         "series_title": "Taboo Tattoo",
+         "series_synonyms": "; Taboo Tattoo",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-07-05",
+         "series_end": "2016-09-20",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/80197.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470575444",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "29786",
+         "series_title": "Shimoneta to Iu Gainen ga Sonzai Shinai Taikutsu na Sekai",
+         "series_synonyms": "Shimoseka; SHIMONETA: A Boring World Where the Concept of Dirty Jokes Doesn't Exist",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2015-07-04",
+         "series_end": "2015-09-19",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/75106.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1480377108",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "29787",
+         "series_title": "Gochuumon wa Usagi Desu ka??",
+         "series_synonyms": "Gochuumon wa Usagi Desu ka? 2; GochiUsa 2; Is the order a rabbit??",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2015-10-10",
+         "series_end": "2015-12-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/76702.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482875991",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "29803",
+         "series_title": "Overlord",
+         "series_synonyms": "Over Lord; Overlord",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2015-07-07",
+         "series_end": "2015-09-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/74462.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673600",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "29854",
          "series_title": "Ushio to Tora (TV)",
          "series_synonyms": "Ushio & Tora; Ushio and Tora",
@@ -3155,6 +5312,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "30016",
+         "series_title": "Nanbaka",
+         "series_synonyms": "Nambaka; Numbaka; The Numbers; Nanbaka",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2016-10-05",
+         "series_end": "2016-12-28",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/81399.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484170005",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "30206",
          "series_title": "Amagi Brilliant Park: Nonbirishiteiru Hima ga Nai!",
          "series_synonyms": "Amagi Brilliant Park Episode 14; Amagi Brilliant Park Tokubetsu-hen",
@@ -3173,6 +5351,69 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1473546789",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "30276",
+         "series_title": "One Punch Man",
+         "series_synonyms": "One Punch-Man; One-Punch Man; OPM; One-Punch Man",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2015-10-05",
+         "series_end": "2015-12-21",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/76049.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1452673583",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "30307",
+         "series_title": "Monster Musume no Iru Nichijou",
+         "series_synonyms": "MonMusu; Monster Musume: Everyday Life with Monster Girls",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2015-07-08",
+         "series_end": "2015-09-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/75104.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "6",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1461450324",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "30503",
+         "series_title": "Noragami Aragoto",
+         "series_synonyms": "; Noragami Aragoto",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2015-10-03",
+         "series_end": "2015-12-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/75627.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1461840323",
          "my_tags": []
       },
       {
@@ -3197,6 +5438,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "30654",
+         "series_title": "Ansatsu Kyoushitsu (TV) 2nd Season",
+         "series_synonyms": "Ansatsu Kyoushitsu Season 2; Ansatsu Kyoushitsu Final Season; Assassination Classroom Second Season",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2016-01-08",
+         "series_end": "2016-07-01",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/77966.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "25",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470606136",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "30831",
+         "series_title": "Kono Subarashii Sekai ni Shukufuku wo!",
+         "series_synonyms": "Give Blessings to This Wonderful World!; KonoSuba: God's Blessing on This Wonderful World!",
+         "series_type": "1",
+         "series_episodes": "10",
+         "series_status": "2",
+         "series_start": "2016-01-14",
+         "series_end": "2016-03-17",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/77831.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "10",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1476641281",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "30911",
          "series_title": "Tales of Zestiria the X",
          "series_synonyms": "Tales of Zestiria the Cross; Tales of Zestiria the X",
@@ -3215,6 +5498,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1470765648",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "30991",
+         "series_title": "Himouto! Umaru-chan: Umaru-chan Mou Ikkai!",
+         "series_synonyms": "Himouto! Umaru-chan OVA",
+         "series_type": "2",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2015-10-19",
+         "series_end": "2015-10-19",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/7/76826.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473976508",
          "my_tags": []
       },
       {
@@ -3260,6 +5564,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "31240",
+         "series_title": "Re:Zero kara Hajimeru Isekai Seikatsu",
+         "series_synonyms": "Re: Life in a different world from zero; ReZero; Re:ZERO -Starting Life in Another World-",
+         "series_type": "1",
+         "series_episodes": "25",
+         "series_status": "2",
+         "series_start": "2016-04-04",
+         "series_end": "2016-09-19",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/79410.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "25",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470473992",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "31251",
          "series_title": "Mobile Suit Gundam: Iron-Blooded Orphans",
          "series_synonyms": "Kidou Senshi Gundam: Tekketsu no Orphans; G-Tekketsu; Mobile Suit Gundam: Iron-Blooded Orphans",
@@ -3281,6 +5606,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "31339",
+         "series_title": "Drifters",
+         "series_synonyms": "Drifters: Battle in a Brand-new World War; Drifters",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-10-07",
+         "series_end": "2016-12-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/80271.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482948178",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31376",
+         "series_title": "Flying Witch",
+         "series_synonyms": "; Flying Witch",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-04-10",
+         "series_end": "2016-06-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/80039.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1468004357",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "31422",
          "series_title": "Minami Kamakura Koukou Joshi Jitensha-bu",
          "series_synonyms": "; Minami Kamakura High School Girls Cycling Club",
@@ -3299,6 +5666,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1484334482",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31442",
+         "series_title": "Musaigen no Phantom World",
+         "series_synonyms": "Musaigen no Phantom World; Myriad Colors Phantom World",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2016-01-07",
+         "series_end": "2016-03-31",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/78339.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462282868",
          "my_tags": []
       },
       {
@@ -3344,6 +5732,48 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "31580",
+         "series_title": "Ajin",
+         "series_synonyms": "Ajin; Ajin: Demi-Human",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2016-01-16",
+         "series_end": "2016-04-09",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/77968.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1476288861",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31636",
+         "series_title": "Dagashi Kashi",
+         "series_synonyms": "Dagashikashi; Dagashi Kashi",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-01-08",
+         "series_end": "2016-04-01",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/77833.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1460203895",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "31646",
          "series_title": "3-gatsu no Lion",
          "series_synonyms": "Sangatsu no Lion; March comes in like a lion",
@@ -3362,6 +5792,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1477083988",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31715",
+         "series_title": "Working!!!: Lord of the Takanashi",
+         "series_synonyms": "Working!!! Episode 14",
+         "series_type": "4",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2016-03-30",
+         "series_end": "2016-03-30",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/79375.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470428978",
          "my_tags": []
       },
       {
@@ -3449,6 +5900,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "31771",
+         "series_title": "Amanchu!",
+         "series_synonyms": [],
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-07-08",
+         "series_end": "2016-09-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/80810.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474747291",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "31793",
          "series_title": "Mahou Shoujo Nante Mou Ii Desukara.",
          "series_synonyms": "I've Had Enough of Being a Magical Girl; Mahou Shoujo Nante Mouiidesukara",
@@ -3496,7 +5968,7 @@ const list =  [
          "series_synonyms": "; Black Butler: Book of the Atlantic",
          "series_type": "3",
          "series_episodes": "1",
-         "series_status": "3",
+         "series_status": "2",
          "series_start": "2017-01-21",
          "series_end": "2017-01-21",
          "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/82438.jpg",
@@ -3509,6 +5981,132 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1471471002",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31859",
+         "series_title": "Hai to Gensou no Grimgar",
+         "series_synonyms": "Grimgal of Ashes and Illusion; Grimgal of Ashes and Fantasies; Hai to Gensou no Grimgal; Grimgar of Fantasy and Ash",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-01-11",
+         "series_end": "2016-03-28",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/77976.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1461868474",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31904",
+         "series_title": "Big Order (TV)",
+         "series_synonyms": "Big Order",
+         "series_type": "1",
+         "series_episodes": "10",
+         "series_status": "2",
+         "series_start": "2016-04-16",
+         "series_end": "2016-06-18",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/79913.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "3",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "5",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1462045717",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31952",
+         "series_title": "Kono Bijutsubu ni wa Mondai ga Aru!",
+         "series_synonyms": "Konobi; This Art Club Has a Problem!",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-07-08",
+         "series_end": "2016-09-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/80688.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474577851",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31953",
+         "series_title": "New Game!",
+         "series_synonyms": "; New Game!",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-07-04",
+         "series_end": "2016-09-19",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/80417.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474496303",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "31964",
+         "series_title": "Boku no Hero Academia",
+         "series_synonyms": "; My Hero Academia",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2016-04-03",
+         "series_end": "2016-06-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/78745.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1469124972",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "32093",
+         "series_title": "Tanaka-kun wa Itsumo Kedaruge",
+         "series_synonyms": "; Tanaka-kun is Always Listless",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-04-09",
+         "series_end": "2016-06-25",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/78565.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1468437416",
          "my_tags": []
       },
       {
@@ -3530,6 +6128,48 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1470505127",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "32182",
+         "series_title": "Mob Psycho 100",
+         "series_synonyms": "Mob Psycho Hyaku; Mob Psycho One Hundred; Mob Psycho 100",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-07-11",
+         "series_end": "2016-09-27",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/80356.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1470822541",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "32190",
+         "series_title": "Omoi no Kakera",
+         "series_synonyms": [],
+         "series_type": "4",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2016-03-24",
+         "series_end": "2016-03-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/80101.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "7",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1473189462",
          "my_tags": []
       },
       {
@@ -3575,6 +6215,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "32282",
+         "series_title": "Shokugeki no Souma: Ni no Sara",
+         "series_synonyms": "Shokugeki no Souma 2nd Season; Shokugeki no Soma 2; Food Wars: Shokugeki no Soma 2; Shokugeki no Soma: The Second Plate; Food Wars! The Second Plate",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2016-07-02",
+         "series_end": "2016-09-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/79353.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474744845",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "32370",
          "series_title": "D.Gray-man Hallow",
          "series_synonyms": "; D.Gray-man HALLOW",
@@ -3596,6 +6257,69 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "32380",
+         "series_title": "Kono Subarashii Sekai ni Shukufuku wo! OVA",
+         "series_synonyms": "KonoSuba OVA; A Blessing to this Wonderful Choker!; Kono Subarashii Choker ni Shufuku wo!",
+         "series_type": "2",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2016-06-24",
+         "series_end": "2016-06-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/80582.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482328427",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "32526",
+         "series_title": "Love Live! Sunshine!!",
+         "series_synonyms": "Love Live! School Idol Project: Sunshine!!",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2016-07-02",
+         "series_end": "2016-09-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/8/80791.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1477991516",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "32547",
+         "series_title": "Non Non Biyori Repeat OVA",
+         "series_synonyms": [],
+         "series_type": "2",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2016-09-23",
+         "series_end": "2016-09-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/78136.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474913117",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "32555",
          "series_title": "Stella no Mahou",
          "series_synonyms": "; Magic of Stella",
@@ -3614,6 +6338,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1475954863",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "32607",
+         "series_title": "Gi(a)rlish Number",
+         "series_synonyms": "; Girlish Number",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-10-07",
+         "series_end": "2016-12-23",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/82291.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484425783",
          "my_tags": []
       },
       {
@@ -3659,6 +6404,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "32686",
+         "series_title": "Keijo!!!!!!!!",
+         "series_synonyms": "; Keijo!!!!!!!!",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-10-06",
+         "series_end": "2016-12-22",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/10/81906.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482948792",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "32729",
          "series_title": "Orange",
          "series_synonyms": "; Orange",
@@ -3698,6 +6464,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1472735566",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "32828",
+         "series_title": "Amaama to Inazuma",
+         "series_synonyms": "; Sweetness & Lightning",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-07-05",
+         "series_end": "2016-09-20",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/6/80546.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1474318627",
          "my_tags": []
       },
       {
@@ -3785,6 +6572,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "32935",
+         "series_title": "Haikyuu!!: Karasuno Koukou VS Shiratorizawa Gakuen Koukou",
+         "series_synonyms": "Haikyuu!! Third Season; Haikyu!! 3rd Season",
+         "series_type": "1",
+         "series_episodes": "10",
+         "series_status": "2",
+         "series_start": "2016-10-08",
+         "series_end": "2016-12-10",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/7/81992.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "10",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1481570127",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "32937",
          "series_title": "Kono Subarashii Sekai ni Shukufuku wo! 2",
          "series_synonyms": "Give Blessings to This Wonderful World! 2; KonoSuba: God's Blessing on This Wonderful World! 2",
@@ -3814,7 +6622,7 @@ const list =  [
          "series_status": "1",
          "series_start": "2017-01-13",
          "series_end": "2017-03-31",
-         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/82926.jpg",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/83937.jpg",
          "my_id": "0",
          "my_watched_episodes": "0",
          "my_start_date": "0000-00-00",
@@ -3824,6 +6632,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1478856095",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "32979",
+         "series_title": "Flip Flappers",
+         "series_synonyms": "; Flip Flappers",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2016-10-06",
+         "series_end": "2016-12-29",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/82292.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484405567",
          "my_tags": []
       },
       {
@@ -3869,6 +6698,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "33031",
+         "series_title": "Shakunetsu no Takkyuu Musume",
+         "series_synonyms": "; Scorching Ping Pong Girls",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-10-04",
+         "series_end": "2016-12-20",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/9/80746.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "8",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484170016",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "33075",
          "series_title": "Musaigen no Phantom World Special",
          "series_synonyms": "; Myriad Colors Phantom World Special",
@@ -3890,9 +6740,30 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "33094",
+         "series_title": "WWW.Working!!",
+         "series_synonyms": "; WWW.WAGNARIA!!",
+         "series_type": "1",
+         "series_episodes": "13",
+         "series_status": "2",
+         "series_start": "2016-10-01",
+         "series_end": "2016-12-24",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/82287.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "13",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482948141",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "33204",
          "series_title": "Hirune Hime: Shiranai Watashi no Monogatari",
-         "series_synonyms": [],
+         "series_synonyms": "; Ancien and the Magic Tablet",
          "series_type": "3",
          "series_episodes": "1",
          "series_status": "3",
@@ -3921,7 +6792,7 @@ const list =  [
          "series_end": "0000-00-00",
          "series_image": "https://myanimelist.cdn-dena.com/images/anime/4/83173.jpg",
          "my_id": "0",
-         "my_watched_episodes": "0",
+         "my_watched_episodes": "2",
          "my_start_date": "0000-00-00",
          "my_finish_date": "0000-00-00",
          "my_score": "0",
@@ -3950,6 +6821,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1476288878",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "33255",
+         "series_title": "Saiki Kusuo no Ψ-nan (TV)",
+         "series_synonyms": "Saiki Kusuo no Psi Nan; The Disastrous Life of Saiki K.",
+         "series_type": "1",
+         "series_episodes": "120",
+         "series_status": "2",
+         "series_start": "2016-07-04",
+         "series_end": "2016-12-26",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/11/80167.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "120",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484083270",
          "my_tags": []
       },
       {
@@ -4037,6 +6929,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "33487",
+         "series_title": "Masamune-kun no Revenge",
+         "series_synonyms": "; Masamune-kun's Revenge",
+         "series_type": "1",
+         "series_episodes": "0",
+         "series_status": "1",
+         "series_start": "2017-01-05",
+         "series_end": "0000-00-00",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/12/83709.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "0",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "0",
+         "my_status": "4",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1484060624",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "33489",
          "series_title": "Little Witch Academia (TV)",
          "series_synonyms": [],
@@ -4045,7 +6958,7 @@ const list =  [
          "series_status": "1",
          "series_start": "2017-01-09",
          "series_end": "0000-00-00",
-         "series_image": "https://myanimelist.cdn-dena.com/images/anime/3/83096.jpg",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/13/83934.jpg",
          "my_id": "0",
          "my_watched_episodes": "0",
          "my_start_date": "0000-00-00",
@@ -4160,6 +7073,27 @@ const list =  [
          "my_rewatching": "0",
          "my_rewatching_ep": "0",
          "my_last_updated": "1484077683",
+         "my_tags": []
+      },
+      {
+         "series_animedb_id": "34009",
+         "series_title": "To Be Hero",
+         "series_synonyms": "; TO BE HERO",
+         "series_type": "1",
+         "series_episodes": "12",
+         "series_status": "2",
+         "series_start": "2016-10-05",
+         "series_end": "2016-12-21",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/2/82347.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "12",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "9",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1482948962",
          "my_tags": []
       },
       {
@@ -4289,6 +7223,27 @@ const list =  [
          "my_tags": []
       },
       {
+         "series_animedb_id": "34240",
+         "series_title": "Shelter",
+         "series_synonyms": "; Shelter",
+         "series_type": "6",
+         "series_episodes": "1",
+         "series_status": "2",
+         "series_start": "2016-10-18",
+         "series_end": "2016-10-18",
+         "series_image": "https://myanimelist.cdn-dena.com/images/anime/5/82388.jpg",
+         "my_id": "0",
+         "my_watched_episodes": "1",
+         "my_start_date": "0000-00-00",
+         "my_finish_date": "0000-00-00",
+         "my_score": "10",
+         "my_status": "2",
+         "my_rewatching": "0",
+         "my_rewatching_ep": "0",
+         "my_last_updated": "1476870245",
+         "my_tags": []
+      },
+      {
          "series_animedb_id": "34277",
          "series_title": "New Game!: Watashi, Shain Ryokou tte Hajimete nano de...",
          "series_synonyms": "New Game! OVA; New Game Episode 13",
@@ -4354,7 +7309,7 @@ const list =  [
       {
          "series_animedb_id": "34549",
          "series_title": "Ryuu no Haisha",
-         "series_synonyms": [],
+         "series_synonyms": "The Dragon Dentist",
          "series_type": "4",
          "series_episodes": "2",
          "series_status": "3",
@@ -4420,7 +7375,7 @@ const list =  [
 
 
 /***/ }),
-/* 20 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4532,1447 +7487,23 @@ const mediator = function mediator() {
 
 
 /***/ }),
-/* 21 */
-/***/ (function(module, exports) {
-
-/*!
- * Cross-Browser Split 1.1.1
- * Copyright 2007-2012 Steven Levithan <stevenlevithan.com>
- * Available under the MIT License
- * ECMAScript compliant, uniform cross-browser split method
- */
-
-/**
- * Splits a string into an array of strings using a regex or string separator. Matches of the
- * separator are not included in the result array. However, if `separator` is a regex that contains
- * capturing groups, backreferences are spliced into the result each time `separator` is matched.
- * Fixes browser bugs compared to the native `String.prototype.split` and can be used reliably
- * cross-browser.
- * @param {String} str String to split.
- * @param {RegExp|String} separator Regex or string to use for separating the string.
- * @param {Number} [limit] Maximum number of items to include in the result array.
- * @returns {Array} Array of substrings.
- * @example
- *
- * // Basic use
- * split('a b c d', ' ');
- * // -> ['a', 'b', 'c', 'd']
- *
- * // With limit
- * split('a b c d', ' ', 2);
- * // -> ['a', 'b']
- *
- * // Backreferences in result array
- * split('..word1 word2..', /([a-z]+)(\d+)/i);
- * // -> ['..', 'word', '1', ' ', 'word', '2', '..']
- */
-module.exports = (function split(undef) {
-
-  var nativeSplit = String.prototype.split,
-    compliantExecNpcg = /()??/.exec("")[1] === undef,
-    // NPCG: nonparticipating capturing group
-    self;
-
-  self = function(str, separator, limit) {
-    // If `separator` is not a regex, use `nativeSplit`
-    if (Object.prototype.toString.call(separator) !== "[object RegExp]") {
-      return nativeSplit.call(str, separator, limit);
-    }
-    var output = [],
-      flags = (separator.ignoreCase ? "i" : "") + (separator.multiline ? "m" : "") + (separator.extended ? "x" : "") + // Proposed for ES6
-      (separator.sticky ? "y" : ""),
-      // Firefox 3+
-      lastLastIndex = 0,
-      // Make `global` and avoid `lastIndex` issues by working with a copy
-      separator = new RegExp(separator.source, flags + "g"),
-      separator2, match, lastIndex, lastLength;
-    str += ""; // Type-convert
-    if (!compliantExecNpcg) {
-      // Doesn't need flags gy, but they don't hurt
-      separator2 = new RegExp("^" + separator.source + "$(?!\\s)", flags);
-    }
-    /* Values for `limit`, per the spec:
-     * If undefined: 4294967295 // Math.pow(2, 32) - 1
-     * If 0, Infinity, or NaN: 0
-     * If positive number: limit = Math.floor(limit); if (limit > 4294967295) limit -= 4294967296;
-     * If negative number: 4294967296 - Math.floor(Math.abs(limit))
-     * If other: Type-convert, then use the above rules
-     */
-    limit = limit === undef ? -1 >>> 0 : // Math.pow(2, 32) - 1
-    limit >>> 0; // ToUint32(limit)
-    while (match = separator.exec(str)) {
-      // `separator.lastIndex` is not reliable cross-browser
-      lastIndex = match.index + match[0].length;
-      if (lastIndex > lastLastIndex) {
-        output.push(str.slice(lastLastIndex, match.index));
-        // Fix browsers whose `exec` methods don't consistently return `undefined` for
-        // nonparticipating capturing groups
-        if (!compliantExecNpcg && match.length > 1) {
-          match[0].replace(separator2, function() {
-            for (var i = 1; i < arguments.length - 2; i++) {
-              if (arguments[i] === undef) {
-                match[i] = undef;
-              }
-            }
-          });
-        }
-        if (match.length > 1 && match.index < str.length) {
-          Array.prototype.push.apply(output, match.slice(1));
-        }
-        lastLength = match[0].length;
-        lastLastIndex = lastIndex;
-        if (output.length >= limit) {
-          break;
-        }
-      }
-      if (separator.lastIndex === match.index) {
-        separator.lastIndex++; // Avoid an infinite loop
-      }
-    }
-    if (lastLastIndex === str.length) {
-      if (lastLength || !separator.test("")) {
-        output.push("");
-      }
-    } else {
-      output.push(str.slice(lastLastIndex));
-    }
-    return output.length > limit ? output.slice(0, limit) : output;
-  };
-
-  return self;
-})();
-
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = toHtml;
 
 
-var OneVersionConstraint = __webpack_require__(24);
+const contextRange = document.createRange();
+contextRange.setStart(document.body, 0);
 
-var MY_VERSION = '7';
-OneVersionConstraint('ev-store', MY_VERSION);
-
-var hashKey = '__EV_STORE_KEY@' + MY_VERSION;
-
-module.exports = EvStore;
-
-function EvStore(elem) {
-    var hash = elem[hashKey];
-
-    if (!hash) {
-        hash = elem[hashKey] = {};
-    }
-
-    return hash;
-}
-
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global) {
-
-/*global window, global*/
-
-var root = typeof window !== 'undefined' ?
-    window : typeof global !== 'undefined' ?
-    global : {};
-
-module.exports = Individual;
-
-function Individual(key, value) {
-    if (key in root) {
-        return root[key];
-    }
-
-    root[key] = value;
-
-    return value;
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
-
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Individual = __webpack_require__(23);
-
-module.exports = OneVersion;
-
-function OneVersion(moduleName, version, defaultValue) {
-    var key = '__INDIVIDUAL_ONE_VERSION_' + moduleName;
-    var enforceKey = key + '_ENFORCE_SINGLETON';
-
-    var versionValue = Individual(enforceKey, version);
-
-    if (versionValue !== version) {
-        throw new Error('Can only have one copy of ' +
-            moduleName + '.\n' +
-            'You already have version ' + versionValue +
-            ' installed.\n' +
-            'This means you cannot install version ' + version);
-    }
-
-    return Individual(key, defaultValue);
-}
-
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var createElement = __webpack_require__(10)
-
-module.exports = createElement
-
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var diff = __webpack_require__(40)
-
-module.exports = diff
-
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var h = __webpack_require__(35)
-
-module.exports = h
-
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var patch = __webpack_require__(31)
-
-module.exports = patch
-
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports) {
-
-// Maps a virtual DOM tree onto a real DOM tree in an efficient manner.
-// We don't want to read all of the DOM nodes in the tree so we use
-// the in-order tree indexing to eliminate recursion down certain branches.
-// We only recurse into a DOM node if we know that it contains a child of
-// interest.
-
-var noChild = {}
-
-module.exports = domIndex
-
-function domIndex(rootNode, tree, indices, nodes) {
-    if (!indices || indices.length === 0) {
-        return {}
-    } else {
-        indices.sort(ascending)
-        return recurse(rootNode, tree, indices, nodes, 0)
-    }
-}
-
-function recurse(rootNode, tree, indices, nodes, rootIndex) {
-    nodes = nodes || {}
-
-
-    if (rootNode) {
-        if (indexInRange(indices, rootIndex, rootIndex)) {
-            nodes[rootIndex] = rootNode
-        }
-
-        var vChildren = tree.children
-
-        if (vChildren) {
-
-            var childNodes = rootNode.childNodes
-
-            for (var i = 0; i < tree.children.length; i++) {
-                rootIndex += 1
-
-                var vChild = vChildren[i] || noChild
-                var nextIndex = rootIndex + (vChild.count || 0)
-
-                // skip recursion down the tree if there are no nodes down here
-                if (indexInRange(indices, rootIndex, nextIndex)) {
-                    recurse(childNodes[i], vChild, indices, nodes, rootIndex)
-                }
-
-                rootIndex = nextIndex
-            }
-        }
-    }
-
-    return nodes
-}
-
-// Binary search for an index in the interval [left, right]
-function indexInRange(indices, left, right) {
-    if (indices.length === 0) {
-        return false
-    }
-
-    var minIndex = 0
-    var maxIndex = indices.length - 1
-    var currentIndex
-    var currentItem
-
-    while (minIndex <= maxIndex) {
-        currentIndex = ((maxIndex + minIndex) / 2) >> 0
-        currentItem = indices[currentIndex]
-
-        if (minIndex === maxIndex) {
-            return currentItem >= left && currentItem <= right
-        } else if (currentItem < left) {
-            minIndex = currentIndex + 1
-        } else  if (currentItem > right) {
-            maxIndex = currentIndex - 1
-        } else {
-            return true
-        }
-    }
-
-    return false;
-}
-
-function ascending(a, b) {
-    return a > b ? 1 : -1
-}
-
-
-/***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var applyProperties = __webpack_require__(9)
-
-var isWidget = __webpack_require__(0)
-var VPatch = __webpack_require__(12)
-
-var updateWidget = __webpack_require__(32)
-
-module.exports = applyPatch
-
-function applyPatch(vpatch, domNode, renderOptions) {
-    var type = vpatch.type
-    var vNode = vpatch.vNode
-    var patch = vpatch.patch
-
-    switch (type) {
-        case VPatch.REMOVE:
-            return removeNode(domNode, vNode)
-        case VPatch.INSERT:
-            return insertNode(domNode, patch, renderOptions)
-        case VPatch.VTEXT:
-            return stringPatch(domNode, vNode, patch, renderOptions)
-        case VPatch.WIDGET:
-            return widgetPatch(domNode, vNode, patch, renderOptions)
-        case VPatch.VNODE:
-            return vNodePatch(domNode, vNode, patch, renderOptions)
-        case VPatch.ORDER:
-            reorderChildren(domNode, patch)
-            return domNode
-        case VPatch.PROPS:
-            applyProperties(domNode, patch, vNode.properties)
-            return domNode
-        case VPatch.THUNK:
-            return replaceRoot(domNode,
-                renderOptions.patch(domNode, patch, renderOptions))
-        default:
-            return domNode
-    }
-}
-
-function removeNode(domNode, vNode) {
-    var parentNode = domNode.parentNode
-
-    if (parentNode) {
-        parentNode.removeChild(domNode)
-    }
-
-    destroyWidget(domNode, vNode);
-
-    return null
-}
-
-function insertNode(parentNode, vNode, renderOptions) {
-    var newNode = renderOptions.render(vNode, renderOptions)
-
-    if (parentNode) {
-        parentNode.appendChild(newNode)
-    }
-
-    return parentNode
-}
-
-function stringPatch(domNode, leftVNode, vText, renderOptions) {
-    var newNode
-
-    if (domNode.nodeType === 3) {
-        domNode.replaceData(0, domNode.length, vText.text)
-        newNode = domNode
-    } else {
-        var parentNode = domNode.parentNode
-        newNode = renderOptions.render(vText, renderOptions)
-
-        if (parentNode && newNode !== domNode) {
-            parentNode.replaceChild(newNode, domNode)
-        }
-    }
-
-    return newNode
-}
-
-function widgetPatch(domNode, leftVNode, widget, renderOptions) {
-    var updating = updateWidget(leftVNode, widget)
-    var newNode
-
-    if (updating) {
-        newNode = widget.update(leftVNode, domNode) || domNode
-    } else {
-        newNode = renderOptions.render(widget, renderOptions)
-    }
-
-    var parentNode = domNode.parentNode
-
-    if (parentNode && newNode !== domNode) {
-        parentNode.replaceChild(newNode, domNode)
-    }
-
-    if (!updating) {
-        destroyWidget(domNode, leftVNode)
-    }
-
-    return newNode
-}
-
-function vNodePatch(domNode, leftVNode, vNode, renderOptions) {
-    var parentNode = domNode.parentNode
-    var newNode = renderOptions.render(vNode, renderOptions)
-
-    if (parentNode && newNode !== domNode) {
-        parentNode.replaceChild(newNode, domNode)
-    }
-
-    return newNode
-}
-
-function destroyWidget(domNode, w) {
-    if (typeof w.destroy === "function" && isWidget(w)) {
-        w.destroy(domNode)
-    }
-}
-
-function reorderChildren(domNode, moves) {
-    var childNodes = domNode.childNodes
-    var keyMap = {}
-    var node
-    var remove
-    var insert
-
-    for (var i = 0; i < moves.removes.length; i++) {
-        remove = moves.removes[i]
-        node = childNodes[remove.from]
-        if (remove.key) {
-            keyMap[remove.key] = node
-        }
-        domNode.removeChild(node)
-    }
-
-    var length = childNodes.length
-    for (var j = 0; j < moves.inserts.length; j++) {
-        insert = moves.inserts[j]
-        node = keyMap[insert.key]
-        // this is the weirdest bug i've ever seen in webkit
-        domNode.insertBefore(node, insert.to >= length++ ? null : childNodes[insert.to])
-    }
-}
-
-function replaceRoot(oldRoot, newRoot) {
-    if (oldRoot && newRoot && oldRoot !== newRoot && oldRoot.parentNode) {
-        oldRoot.parentNode.replaceChild(newRoot, oldRoot)
-    }
-
-    return newRoot;
-}
-
-
-/***/ }),
-/* 31 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var document = __webpack_require__(7)
-var isArray = __webpack_require__(6)
-
-var render = __webpack_require__(10)
-var domIndex = __webpack_require__(29)
-var patchOp = __webpack_require__(30)
-module.exports = patch
-
-function patch(rootNode, patches, renderOptions) {
-    renderOptions = renderOptions || {}
-    renderOptions.patch = renderOptions.patch && renderOptions.patch !== patch
-        ? renderOptions.patch
-        : patchRecursive
-    renderOptions.render = renderOptions.render || render
-
-    return renderOptions.patch(rootNode, patches, renderOptions)
-}
-
-function patchRecursive(rootNode, patches, renderOptions) {
-    var indices = patchIndices(patches)
-
-    if (indices.length === 0) {
-        return rootNode
-    }
-
-    var index = domIndex(rootNode, patches.a, indices)
-    var ownerDocument = rootNode.ownerDocument
-
-    if (!renderOptions.document && ownerDocument !== document) {
-        renderOptions.document = ownerDocument
-    }
-
-    for (var i = 0; i < indices.length; i++) {
-        var nodeIndex = indices[i]
-        rootNode = applyPatch(rootNode,
-            index[nodeIndex],
-            patches[nodeIndex],
-            renderOptions)
-    }
-
-    return rootNode
-}
-
-function applyPatch(rootNode, domNode, patchList, renderOptions) {
-    if (!domNode) {
-        return rootNode
-    }
-
-    var newNode
-
-    if (isArray(patchList)) {
-        for (var i = 0; i < patchList.length; i++) {
-            newNode = patchOp(patchList[i], domNode, renderOptions)
-
-            if (domNode === rootNode) {
-                rootNode = newNode
-            }
-        }
-    } else {
-        newNode = patchOp(patchList, domNode, renderOptions)
-
-        if (domNode === rootNode) {
-            rootNode = newNode
-        }
-    }
-
-    return rootNode
-}
-
-function patchIndices(patches) {
-    var indices = []
-
-    for (var key in patches) {
-        if (key !== "a") {
-            indices.push(Number(key))
-        }
-    }
-
-    return indices
-}
-
-
-/***/ }),
-/* 32 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var isWidget = __webpack_require__(0)
-
-module.exports = updateWidget
-
-function updateWidget(a, b) {
-    if (isWidget(a) && isWidget(b)) {
-        if ("name" in a && "name" in b) {
-            return a.id === b.id
-        } else {
-            return a.init === b.init
-        }
-    }
-
-    return false
-}
-
-
-/***/ }),
-/* 33 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var EvStore = __webpack_require__(22);
-
-module.exports = EvHook;
-
-function EvHook(value) {
-    if (!(this instanceof EvHook)) {
-        return new EvHook(value);
-    }
-
-    this.value = value;
-}
-
-EvHook.prototype.hook = function (node, propertyName) {
-    var es = EvStore(node);
-    var propName = propertyName.substr(3);
-
-    es[propName] = this.value;
-};
-
-EvHook.prototype.unhook = function(node, propertyName) {
-    var es = EvStore(node);
-    var propName = propertyName.substr(3);
-
-    es[propName] = undefined;
+function toHtml(string) {
+  return contextRange.createContextualFragment(string);
 };
 
 
 /***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = SoftSetHook;
-
-function SoftSetHook(value) {
-    if (!(this instanceof SoftSetHook)) {
-        return new SoftSetHook(value);
-    }
-
-    this.value = value;
-}
-
-SoftSetHook.prototype.hook = function (node, propertyName) {
-    if (node[propertyName] !== this.value) {
-        node[propertyName] = this.value;
-    }
-};
-
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var isArray = __webpack_require__(6);
-
-var VNode = __webpack_require__(37);
-var VText = __webpack_require__(38);
-var isVNode = __webpack_require__(1);
-var isVText = __webpack_require__(5);
-var isWidget = __webpack_require__(0);
-var isHook = __webpack_require__(4);
-var isVThunk = __webpack_require__(3);
-
-var parseTag = __webpack_require__(36);
-var softSetHook = __webpack_require__(34);
-var evHook = __webpack_require__(33);
-
-module.exports = h;
-
-function h(tagName, properties, children) {
-    var childNodes = [];
-    var tag, props, key, namespace;
-
-    if (!children && isChildren(properties)) {
-        children = properties;
-        props = {};
-    }
-
-    props = props || properties || {};
-    tag = parseTag(tagName, props);
-
-    // support keys
-    if (props.hasOwnProperty('key')) {
-        key = props.key;
-        props.key = undefined;
-    }
-
-    // support namespace
-    if (props.hasOwnProperty('namespace')) {
-        namespace = props.namespace;
-        props.namespace = undefined;
-    }
-
-    // fix cursor bug
-    if (tag === 'INPUT' &&
-        !namespace &&
-        props.hasOwnProperty('value') &&
-        props.value !== undefined &&
-        !isHook(props.value)
-    ) {
-        props.value = softSetHook(props.value);
-    }
-
-    transformProperties(props);
-
-    if (children !== undefined && children !== null) {
-        addChild(children, childNodes, tag, props);
-    }
-
-
-    return new VNode(tag, props, childNodes, key, namespace);
-}
-
-function addChild(c, childNodes, tag, props) {
-    if (typeof c === 'string') {
-        childNodes.push(new VText(c));
-    } else if (typeof c === 'number') {
-        childNodes.push(new VText(String(c)));
-    } else if (isChild(c)) {
-        childNodes.push(c);
-    } else if (isArray(c)) {
-        for (var i = 0; i < c.length; i++) {
-            addChild(c[i], childNodes, tag, props);
-        }
-    } else if (c === null || c === undefined) {
-        return;
-    } else {
-        throw UnexpectedVirtualElement({
-            foreignObject: c,
-            parentVnode: {
-                tagName: tag,
-                properties: props
-            }
-        });
-    }
-}
-
-function transformProperties(props) {
-    for (var propName in props) {
-        if (props.hasOwnProperty(propName)) {
-            var value = props[propName];
-
-            if (isHook(value)) {
-                continue;
-            }
-
-            if (propName.substr(0, 3) === 'ev-') {
-                // add ev-foo support
-                props[propName] = evHook(value);
-            }
-        }
-    }
-}
-
-function isChild(x) {
-    return isVNode(x) || isVText(x) || isWidget(x) || isVThunk(x);
-}
-
-function isChildren(x) {
-    return typeof x === 'string' || isArray(x) || isChild(x);
-}
-
-function UnexpectedVirtualElement(data) {
-    var err = new Error();
-
-    err.type = 'virtual-hyperscript.unexpected.virtual-element';
-    err.message = 'Unexpected virtual child passed to h().\n' +
-        'Expected a VNode / Vthunk / VWidget / string but:\n' +
-        'got:\n' +
-        errorString(data.foreignObject) +
-        '.\n' +
-        'The parent vnode is:\n' +
-        errorString(data.parentVnode)
-        '\n' +
-        'Suggested fix: change your `h(..., [ ... ])` callsite.';
-    err.foreignObject = data.foreignObject;
-    err.parentVnode = data.parentVnode;
-
-    return err;
-}
-
-function errorString(obj) {
-    try {
-        return JSON.stringify(obj, null, '    ');
-    } catch (e) {
-        return String(obj);
-    }
-}
-
-
-/***/ }),
-/* 36 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var split = __webpack_require__(21);
-
-var classIdSplit = /([\.#]?[a-zA-Z0-9\u007F-\uFFFF_:-]+)/;
-var notClassId = /^\.|#/;
-
-module.exports = parseTag;
-
-function parseTag(tag, props) {
-    if (!tag) {
-        return 'DIV';
-    }
-
-    var noId = !(props.hasOwnProperty('id'));
-
-    var tagParts = split(tag, classIdSplit);
-    var tagName = null;
-
-    if (notClassId.test(tagParts[1])) {
-        tagName = 'DIV';
-    }
-
-    var classes, part, type, i;
-
-    for (i = 0; i < tagParts.length; i++) {
-        part = tagParts[i];
-
-        if (!part) {
-            continue;
-        }
-
-        type = part.charAt(0);
-
-        if (!tagName) {
-            tagName = part;
-        } else if (type === '.') {
-            classes = classes || [];
-            classes.push(part.substring(1, part.length));
-        } else if (type === '#' && noId) {
-            props.id = part.substring(1, part.length);
-        }
-    }
-
-    if (classes) {
-        if (props.className) {
-            classes.push(props.className);
-        }
-
-        props.className = classes.join(' ');
-    }
-
-    return props.namespace ? tagName : tagName.toUpperCase();
-}
-
-
-/***/ }),
-/* 37 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var version = __webpack_require__(2)
-var isVNode = __webpack_require__(1)
-var isWidget = __webpack_require__(0)
-var isThunk = __webpack_require__(3)
-var isVHook = __webpack_require__(4)
-
-module.exports = VirtualNode
-
-var noProperties = {}
-var noChildren = []
-
-function VirtualNode(tagName, properties, children, key, namespace) {
-    this.tagName = tagName
-    this.properties = properties || noProperties
-    this.children = children || noChildren
-    this.key = key != null ? String(key) : undefined
-    this.namespace = (typeof namespace === "string") ? namespace : null
-
-    var count = (children && children.length) || 0
-    var descendants = 0
-    var hasWidgets = false
-    var hasThunks = false
-    var descendantHooks = false
-    var hooks
-
-    for (var propName in properties) {
-        if (properties.hasOwnProperty(propName)) {
-            var property = properties[propName]
-            if (isVHook(property) && property.unhook) {
-                if (!hooks) {
-                    hooks = {}
-                }
-
-                hooks[propName] = property
-            }
-        }
-    }
-
-    for (var i = 0; i < count; i++) {
-        var child = children[i]
-        if (isVNode(child)) {
-            descendants += child.count || 0
-
-            if (!hasWidgets && child.hasWidgets) {
-                hasWidgets = true
-            }
-
-            if (!hasThunks && child.hasThunks) {
-                hasThunks = true
-            }
-
-            if (!descendantHooks && (child.hooks || child.descendantHooks)) {
-                descendantHooks = true
-            }
-        } else if (!hasWidgets && isWidget(child)) {
-            if (typeof child.destroy === "function") {
-                hasWidgets = true
-            }
-        } else if (!hasThunks && isThunk(child)) {
-            hasThunks = true;
-        }
-    }
-
-    this.count = count + descendants
-    this.hasWidgets = hasWidgets
-    this.hasThunks = hasThunks
-    this.hooks = hooks
-    this.descendantHooks = descendantHooks
-}
-
-VirtualNode.prototype.version = version
-VirtualNode.prototype.type = "VirtualNode"
-
-
-/***/ }),
-/* 38 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var version = __webpack_require__(2)
-
-module.exports = VirtualText
-
-function VirtualText(text) {
-    this.text = String(text)
-}
-
-VirtualText.prototype.version = version
-VirtualText.prototype.type = "VirtualText"
-
-
-/***/ }),
-/* 39 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var isObject = __webpack_require__(8)
-var isHook = __webpack_require__(4)
-
-module.exports = diffProps
-
-function diffProps(a, b) {
-    var diff
-
-    for (var aKey in a) {
-        if (!(aKey in b)) {
-            diff = diff || {}
-            diff[aKey] = undefined
-        }
-
-        var aValue = a[aKey]
-        var bValue = b[aKey]
-
-        if (aValue === bValue) {
-            continue
-        } else if (isObject(aValue) && isObject(bValue)) {
-            if (getPrototype(bValue) !== getPrototype(aValue)) {
-                diff = diff || {}
-                diff[aKey] = bValue
-            } else if (isHook(bValue)) {
-                 diff = diff || {}
-                 diff[aKey] = bValue
-            } else {
-                var objectDiff = diffProps(aValue, bValue)
-                if (objectDiff) {
-                    diff = diff || {}
-                    diff[aKey] = objectDiff
-                }
-            }
-        } else {
-            diff = diff || {}
-            diff[aKey] = bValue
-        }
-    }
-
-    for (var bKey in b) {
-        if (!(bKey in a)) {
-            diff = diff || {}
-            diff[bKey] = b[bKey]
-        }
-    }
-
-    return diff
-}
-
-function getPrototype(value) {
-  if (Object.getPrototypeOf) {
-    return Object.getPrototypeOf(value)
-  } else if (value.__proto__) {
-    return value.__proto__
-  } else if (value.constructor) {
-    return value.constructor.prototype
-  }
-}
-
-
-/***/ }),
-/* 40 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var isArray = __webpack_require__(6)
-
-var VPatch = __webpack_require__(12)
-var isVNode = __webpack_require__(1)
-var isVText = __webpack_require__(5)
-var isWidget = __webpack_require__(0)
-var isThunk = __webpack_require__(3)
-var handleThunk = __webpack_require__(11)
-
-var diffProps = __webpack_require__(39)
-
-module.exports = diff
-
-function diff(a, b) {
-    var patch = { a: a }
-    walk(a, b, patch, 0)
-    return patch
-}
-
-function walk(a, b, patch, index) {
-    if (a === b) {
-        return
-    }
-
-    var apply = patch[index]
-    var applyClear = false
-
-    if (isThunk(a) || isThunk(b)) {
-        thunks(a, b, patch, index)
-    } else if (b == null) {
-
-        // If a is a widget we will add a remove patch for it
-        // Otherwise any child widgets/hooks must be destroyed.
-        // This prevents adding two remove patches for a widget.
-        if (!isWidget(a)) {
-            clearState(a, patch, index)
-            apply = patch[index]
-        }
-
-        apply = appendPatch(apply, new VPatch(VPatch.REMOVE, a, b))
-    } else if (isVNode(b)) {
-        if (isVNode(a)) {
-            if (a.tagName === b.tagName &&
-                a.namespace === b.namespace &&
-                a.key === b.key) {
-                var propsPatch = diffProps(a.properties, b.properties)
-                if (propsPatch) {
-                    apply = appendPatch(apply,
-                        new VPatch(VPatch.PROPS, a, propsPatch))
-                }
-                apply = diffChildren(a, b, patch, apply, index)
-            } else {
-                apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
-                applyClear = true
-            }
-        } else {
-            apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
-            applyClear = true
-        }
-    } else if (isVText(b)) {
-        if (!isVText(a)) {
-            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
-            applyClear = true
-        } else if (a.text !== b.text) {
-            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
-        }
-    } else if (isWidget(b)) {
-        if (!isWidget(a)) {
-            applyClear = true
-        }
-
-        apply = appendPatch(apply, new VPatch(VPatch.WIDGET, a, b))
-    }
-
-    if (apply) {
-        patch[index] = apply
-    }
-
-    if (applyClear) {
-        clearState(a, patch, index)
-    }
-}
-
-function diffChildren(a, b, patch, apply, index) {
-    var aChildren = a.children
-    var orderedSet = reorder(aChildren, b.children)
-    var bChildren = orderedSet.children
-
-    var aLen = aChildren.length
-    var bLen = bChildren.length
-    var len = aLen > bLen ? aLen : bLen
-
-    for (var i = 0; i < len; i++) {
-        var leftNode = aChildren[i]
-        var rightNode = bChildren[i]
-        index += 1
-
-        if (!leftNode) {
-            if (rightNode) {
-                // Excess nodes in b need to be added
-                apply = appendPatch(apply,
-                    new VPatch(VPatch.INSERT, null, rightNode))
-            }
-        } else {
-            walk(leftNode, rightNode, patch, index)
-        }
-
-        if (isVNode(leftNode) && leftNode.count) {
-            index += leftNode.count
-        }
-    }
-
-    if (orderedSet.moves) {
-        // Reorder nodes last
-        apply = appendPatch(apply, new VPatch(
-            VPatch.ORDER,
-            a,
-            orderedSet.moves
-        ))
-    }
-
-    return apply
-}
-
-function clearState(vNode, patch, index) {
-    // TODO: Make this a single walk, not two
-    unhook(vNode, patch, index)
-    destroyWidgets(vNode, patch, index)
-}
-
-// Patch records for all destroyed widgets must be added because we need
-// a DOM node reference for the destroy function
-function destroyWidgets(vNode, patch, index) {
-    if (isWidget(vNode)) {
-        if (typeof vNode.destroy === "function") {
-            patch[index] = appendPatch(
-                patch[index],
-                new VPatch(VPatch.REMOVE, vNode, null)
-            )
-        }
-    } else if (isVNode(vNode) && (vNode.hasWidgets || vNode.hasThunks)) {
-        var children = vNode.children
-        var len = children.length
-        for (var i = 0; i < len; i++) {
-            var child = children[i]
-            index += 1
-
-            destroyWidgets(child, patch, index)
-
-            if (isVNode(child) && child.count) {
-                index += child.count
-            }
-        }
-    } else if (isThunk(vNode)) {
-        thunks(vNode, null, patch, index)
-    }
-}
-
-// Create a sub-patch for thunks
-function thunks(a, b, patch, index) {
-    var nodes = handleThunk(a, b)
-    var thunkPatch = diff(nodes.a, nodes.b)
-    if (hasPatches(thunkPatch)) {
-        patch[index] = new VPatch(VPatch.THUNK, null, thunkPatch)
-    }
-}
-
-function hasPatches(patch) {
-    for (var index in patch) {
-        if (index !== "a") {
-            return true
-        }
-    }
-
-    return false
-}
-
-// Execute hooks when two nodes are identical
-function unhook(vNode, patch, index) {
-    if (isVNode(vNode)) {
-        if (vNode.hooks) {
-            patch[index] = appendPatch(
-                patch[index],
-                new VPatch(
-                    VPatch.PROPS,
-                    vNode,
-                    undefinedKeys(vNode.hooks)
-                )
-            )
-        }
-
-        if (vNode.descendantHooks || vNode.hasThunks) {
-            var children = vNode.children
-            var len = children.length
-            for (var i = 0; i < len; i++) {
-                var child = children[i]
-                index += 1
-
-                unhook(child, patch, index)
-
-                if (isVNode(child) && child.count) {
-                    index += child.count
-                }
-            }
-        }
-    } else if (isThunk(vNode)) {
-        thunks(vNode, null, patch, index)
-    }
-}
-
-function undefinedKeys(obj) {
-    var result = {}
-
-    for (var key in obj) {
-        result[key] = undefined
-    }
-
-    return result
-}
-
-// List diff, naive left to right reordering
-function reorder(aChildren, bChildren) {
-    // O(M) time, O(M) memory
-    var bChildIndex = keyIndex(bChildren)
-    var bKeys = bChildIndex.keys
-    var bFree = bChildIndex.free
-
-    if (bFree.length === bChildren.length) {
-        return {
-            children: bChildren,
-            moves: null
-        }
-    }
-
-    // O(N) time, O(N) memory
-    var aChildIndex = keyIndex(aChildren)
-    var aKeys = aChildIndex.keys
-    var aFree = aChildIndex.free
-
-    if (aFree.length === aChildren.length) {
-        return {
-            children: bChildren,
-            moves: null
-        }
-    }
-
-    // O(MAX(N, M)) memory
-    var newChildren = []
-
-    var freeIndex = 0
-    var freeCount = bFree.length
-    var deletedItems = 0
-
-    // Iterate through a and match a node in b
-    // O(N) time,
-    for (var i = 0 ; i < aChildren.length; i++) {
-        var aItem = aChildren[i]
-        var itemIndex
-
-        if (aItem.key) {
-            if (bKeys.hasOwnProperty(aItem.key)) {
-                // Match up the old keys
-                itemIndex = bKeys[aItem.key]
-                newChildren.push(bChildren[itemIndex])
-
-            } else {
-                // Remove old keyed items
-                itemIndex = i - deletedItems++
-                newChildren.push(null)
-            }
-        } else {
-            // Match the item in a with the next free item in b
-            if (freeIndex < freeCount) {
-                itemIndex = bFree[freeIndex++]
-                newChildren.push(bChildren[itemIndex])
-            } else {
-                // There are no free items in b to match with
-                // the free items in a, so the extra free nodes
-                // are deleted.
-                itemIndex = i - deletedItems++
-                newChildren.push(null)
-            }
-        }
-    }
-
-    var lastFreeIndex = freeIndex >= bFree.length ?
-        bChildren.length :
-        bFree[freeIndex]
-
-    // Iterate through b and append any new keys
-    // O(M) time
-    for (var j = 0; j < bChildren.length; j++) {
-        var newItem = bChildren[j]
-
-        if (newItem.key) {
-            if (!aKeys.hasOwnProperty(newItem.key)) {
-                // Add any new keyed items
-                // We are adding new items to the end and then sorting them
-                // in place. In future we should insert new items in place.
-                newChildren.push(newItem)
-            }
-        } else if (j >= lastFreeIndex) {
-            // Add any leftover non-keyed items
-            newChildren.push(newItem)
-        }
-    }
-
-    var simulate = newChildren.slice()
-    var simulateIndex = 0
-    var removes = []
-    var inserts = []
-    var simulateItem
-
-    for (var k = 0; k < bChildren.length;) {
-        var wantedItem = bChildren[k]
-        simulateItem = simulate[simulateIndex]
-
-        // remove items
-        while (simulateItem === null && simulate.length) {
-            removes.push(remove(simulate, simulateIndex, null))
-            simulateItem = simulate[simulateIndex]
-        }
-
-        if (!simulateItem || simulateItem.key !== wantedItem.key) {
-            // if we need a key in this position...
-            if (wantedItem.key) {
-                if (simulateItem && simulateItem.key) {
-                    // if an insert doesn't put this key in place, it needs to move
-                    if (bKeys[simulateItem.key] !== k + 1) {
-                        removes.push(remove(simulate, simulateIndex, simulateItem.key))
-                        simulateItem = simulate[simulateIndex]
-                        // if the remove didn't put the wanted item in place, we need to insert it
-                        if (!simulateItem || simulateItem.key !== wantedItem.key) {
-                            inserts.push({key: wantedItem.key, to: k})
-                        }
-                        // items are matching, so skip ahead
-                        else {
-                            simulateIndex++
-                        }
-                    }
-                    else {
-                        inserts.push({key: wantedItem.key, to: k})
-                    }
-                }
-                else {
-                    inserts.push({key: wantedItem.key, to: k})
-                }
-                k++
-            }
-            // a key in simulate has no matching wanted key, remove it
-            else if (simulateItem && simulateItem.key) {
-                removes.push(remove(simulate, simulateIndex, simulateItem.key))
-            }
-        }
-        else {
-            simulateIndex++
-            k++
-        }
-    }
-
-    // remove all the remaining nodes from simulate
-    while(simulateIndex < simulate.length) {
-        simulateItem = simulate[simulateIndex]
-        removes.push(remove(simulate, simulateIndex, simulateItem && simulateItem.key))
-    }
-
-    // If the only moves we have are deletes then we can just
-    // let the delete patch remove these items.
-    if (removes.length === deletedItems && !inserts.length) {
-        return {
-            children: newChildren,
-            moves: null
-        }
-    }
-
-    return {
-        children: newChildren,
-        moves: {
-            removes: removes,
-            inserts: inserts
-        }
-    }
-}
-
-function remove(arr, index, key) {
-    arr.splice(index, 1)
-
-    return {
-        from: index,
-        key: key
-    }
-}
-
-function keyIndex(children) {
-    var keys = {}
-    var free = []
-    var length = children.length
-
-    for (var i = 0; i < length; i++) {
-        var child = children[i]
-
-        if (child.key) {
-            keys[child.key] = i
-        } else {
-            free.push(i)
-        }
-    }
-
-    return {
-        keys: keys,     // A hash of key name to index
-        free: free      // An array of unkeyed item indices
-    }
-}
-
-function appendPatch(apply, patch) {
-    if (apply) {
-        if (isArray(apply)) {
-            apply.push(patch)
-        } else {
-            apply = [apply, patch]
-        }
-
-        return apply
-    } else {
-        return patch
-    }
-}
-
-
-/***/ }),
-/* 41 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6244,12 +7775,12 @@ class MALjs {
 
 
 /***/ }),
-/* 42 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__list_data__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mal_api__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__list_data__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mal_api__ = __webpack_require__(8);
 /* harmony export (immutable) */ __webpack_exports__["a"] = mal;
 
 
@@ -6296,8 +7827,10 @@ function mal() {
 
       const get = function() {
         return new Promise(resolve => {
-          resolve(data);
-          console.warn('Using fake data');
+          setTimeout(() => {
+            console.warn('Fetched fake data');
+            resolve(data);
+          }, 545);
 
           // api.anime.list().then(data => {
           //   resolve(data.myanimelist.anime.map(formatData));
@@ -6314,18 +7847,12 @@ function mal() {
 
 
 /***/ }),
-/* 43 */
-/***/ (function(module, exports) {
-
-/* (ignored) */
-
-/***/ }),
-/* 44 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__shell__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__shell__ = __webpack_require__(0);
 
 
 

@@ -21,7 +21,6 @@
     "webpack": "^2.2.0-rc.7"
   },
   "dependencies": {
-    "string-to-html": "^1.0.1",
-    "virtual-dom": "^2.1.1"
+    "string-to-html": "^1.0.1"
   }
 }

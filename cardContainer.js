@@ -1,27 +1,18 @@
 'use strict';
 
 export default function cardContainer(services, card, refElement, list) {
-  let nodes = [];
-  let state = list;
-  let loaded = 0;
+  let data = list.slice();
+  let renderedCards = [];
+  let state = data;
   const loadLimit = 32;
   let containerHeight = 0;
   let windowHeight = window.innerHeight;
 
-  // Event Listeners
-  const handleLoadingOfNextStateOnScroll = function(event) {
-    if (loaded >= state.length) {
-      return;
-    }
-
-    const distance = containerHeight - (window.scrollY + windowHeight);
-
-    if (distance < containerHeight / 2) {
-      renderNextStatePartial();
-    }
+  const filters = {
+    status: 'watching',
+    season: 'all',
+    year: 'all',
   };
-  window.addEventListener('scroll', handleLoadingOfNextStateOnScroll, { passive: true });
-  window.addEventListener('resize', () => { windowHeight = window.innerHeight }, { passive: true });
 
   const seasons = {
     winter: 0, // Jan starts at 0
@@ -42,10 +33,35 @@ export default function cardContainer(services, card, refElement, list) {
   const summerSeason = item => (new Date(item.starts)).getMonth() == seasons.summer;
   const fallSeason = item => (new Date(item.starts)).getMonth() == seasons.fall;
 
-  const filter = function(status = 'watching', season = 'all', year = 'all') {
-    let filtered = list.slice(0);
+  // Event Listeners
+  const handleLoadingOfNextStateOnScroll = function(event) {
+    if (renderedCards.length >= state.length) {
+      return;
+    }
 
-    switch(status) {
+    const distance = containerHeight - (window.scrollY + windowHeight);
+
+    if (distance < containerHeight / 2) {
+      renderNextStatePartial();
+    }
+  };
+  window.addEventListener('scroll', handleLoadingOfNextStateOnScroll, { passive: true });
+  window.addEventListener('resize', () => { windowHeight = window.innerHeight }, { passive: true });
+
+  const filter = function(status = 'watching', season = 'all', year = 'all') {
+    filters.status = status;
+    filters.season = season;
+    filters.year = year;
+
+    const sortedData = sortData(data);
+    const filteredData = filterData(sortedData);
+    state = filteredData;
+  };
+
+  const filterData = function(dataToFilter) {
+    let filtered = dataToFilter.slice();
+
+    switch(filters.status) {
       case 'watching':
         filtered = filtered.filter(watching);
         break;
@@ -68,7 +84,7 @@ export default function cardContainer(services, card, refElement, list) {
         throw new Error(`Unrecognized filter "${status}"`);
     }
 
-    switch(season) {
+    switch(filters.season) {
       case 'winter':
         filtered = filtered.filter(winterSeason);
         break;
@@ -88,16 +104,16 @@ export default function cardContainer(services, card, refElement, list) {
         throw new Error(`Unrecognized filter "${season}"`);
     }
 
-    if (year !== 'all') {
-      year = parseInt(year, 10);
-      filtered = filtered.filter(item => ( new Date(item.starts)).getFullYear() === year);
+    if (filters.year !== 'all') {
+      filters.year = parseInt(filters.year, 10);
+      filtered = filtered.filter(item => ( new Date(item.starts)).getFullYear() === filters.year);
     }
 
-    return state = filtered;
+    return filtered;
   };
 
-  const sort = function() {
-    const sortedByStatus = state.slice().sort((a, b) => {
+  const sortData = function(dataToSort) {
+    const sortedByStatus = dataToSort.slice().sort((a, b) => {
       if (a.status > b.status) {
         return 1;
       }
@@ -135,19 +151,17 @@ export default function cardContainer(services, card, refElement, list) {
       sorted = sorted.concat(grouped[prop]);
     }
 
-    state = sorted;
+    return sorted;
   };
 
   const render = function() {
-    // If there are any remove all nodes from dom first
-    if (nodes.length) {
-      nodes.forEach(node => node.remove());
+    // If there are any remove all cards from dom first
+    if (renderedCards.length) {
+      renderedCards.forEach(({node}) => node.remove());
     }
 
     // Clear the array
-    nodes = [];
-    // Eeset amount of loaded cards
-    loaded = 0;
+    renderedCards = [];
 
     if (!state.length) {
       refElement.classList.add('isEmpty');
@@ -162,7 +176,7 @@ export default function cardContainer(services, card, refElement, list) {
   };
 
   const renderNextStatePartial = function() {
-    if (loaded >= state.length) {
+    if (renderedCards.length >= state.length) {
       console.info('Completely rendered state to DOM.');
       return;
     }
@@ -177,17 +191,17 @@ export default function cardContainer(services, card, refElement, list) {
       const node = document.createElement('li');
       const animeCard = card(services, node, anime);
       animeCard.render();
-      nodes.push(node);
+      renderedCards.push({ instance: animeCard, id: animeCard.state.id, node});
     });
 
-    // Append all nodes to dom after creating the nodes
+    // Append all cards to dom after creating the cards
     // this prevents a read, write, read, write cycle
-    nodes.forEach(node => refElement.appendChild(node));
+    renderedCards.forEach(({node}) => refElement.appendChild(node));
   };
 
   const getStateToLoad = function() {
+    const loaded = renderedCards.length;
     const slicedState = state.slice(loaded, loaded + loadLimit);
-    loaded = loaded + loadLimit;
     return slicedState;
   };
 
@@ -195,9 +209,22 @@ export default function cardContainer(services, card, refElement, list) {
     containerHeight = refElement.offsetTop + refElement.offsetHeight;
   };
 
+  const updateState = function(newState) {
+    console.info('updateState: Updating to new state.');
+    data = newState.slice();
+
+    const sortedData = sortData(data);
+    const filteredData = filterData(sortedData);
+
+    state = filteredData;
+
+    render();
+  };
+
   return {
-    sort,
     filter,
+    state,
+    updateState,
     render,
     renderNextStatePartial
   };
