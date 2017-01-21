@@ -1,7 +1,7 @@
 {
   "name": "new-tab-myanimelist",
   "version": "0.1.0",
-  "description": "Replaces chrome's new tab with your list from myanimelist.net",
+  "description": "A chrome extension that replaces your new tab window with your list from myanimelist.net",
   "scripts": {
     "build": "./node_modules/.bin/webpack -p",
     "watch": "./node_modules/.bin/webpack --progress --colors --watch",

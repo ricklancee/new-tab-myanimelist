@@ -34,6 +34,9 @@ export default function card({ toHtml, bus }, refElement, anime) {
           </a>
         </figure>
         <div class="card__controls">
+          <div class="card__status-buttons">
+            <button class="card__complete-button" data-ref="complete">Complete</button>
+          </div>
           <button class="card__episode-button" data-ref="decrement">-</button>
           <div class="card__episode-count">
             <div>
@@ -50,8 +53,10 @@ export default function card({ toHtml, bus }, refElement, anime) {
   };
 
   const incrementEpisode = function() {
-    if (state.currentEpisode === anime.episodeCount)
+    if (state.currentEpisode === anime.episodeCount) {
+      showCompleteButton();
       return;
+    }
 
     state.currentEpisode = state.currentEpisode + 1;
     updateCard();
@@ -83,6 +88,10 @@ export default function card({ toHtml, bus }, refElement, anime) {
     elements.image.src = state.image;
     elements.image.alt = state.title;
     elements.title.textContent = state.title;
+  };
+
+  const showCompleteButton = function() {
+
   };
 
   const render = function() {

@@ -161,11 +161,6 @@ filter-season {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  display: grid;
-  grid-gap: 15px;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: auto;
-  grid-auto-flow: dense;
 }
 
 .card-container.isEmpty:after {
@@ -175,12 +170,6 @@ filter-season {
 
 .card-container > li {
   margin: 5px;
-}
-
-@supports (grid-gap: 15px) {
-  .card-container > li {
-    margin: 0;
-  }
 }
 
 /* Compenent: card  */
@@ -270,10 +259,37 @@ filter-season {
 }
 
 .card__controls {
+  position: relative;
   display: flex;
   height: 40px;
 }
-.card__controls > div {
+
+.card__status-buttons {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /*display: flex;*/
+  flex-direction: column;
+  align-items: flex-end;
+  transform: translateY(-100%);
+}
+
+.card__status-buttons > button {
+  font-size: 12px;
+  padding: 0.5em 1em;
+  background: #18A939;
+  border: 0;
+  color: #fff;
+  text-align: center;
+}
+
+.card__status-buttons > button.isShown {
+  visibility: hidden;
+}
+
+.card__controls > .card__episode-count {
   flex: 1;
 }
 .card__controls > button {
@@ -515,8 +531,8 @@ body.hasOverlay {
   width: 3px;
   display: inline-block;
 
-  -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;
-  animation: sk-stretchdelay 1.2s infinite ease-in-out;
+  -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
+  animation: stretchdelay 1.2s infinite ease-in-out;
 }
 
 .spinner .rect2 {
@@ -539,12 +555,12 @@ body.hasOverlay {
   animation-delay: -0.8s;
 }
 
-@-webkit-keyframes sk-stretchdelay {
+@-webkit-keyframes stretchdelay {
   0%, 40%, 100% { -webkit-transform: scaleY(0.4) }
   20% { -webkit-transform: scaleY(1.0) }
 }
 
-@keyframes sk-stretchdelay {
+@keyframes stretchdelay {
   0%, 40%, 100% {
     transform: scaleY(0.4);
     -webkit-transform: scaleY(0.4);

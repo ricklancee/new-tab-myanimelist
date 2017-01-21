@@ -1,4 +1,4 @@
-# MyAnimeList extension for chrome
+# MyAnimeList in a new tab for chrome
 
 This chrome extension replaces your new tab window with your list from myanimelist.net.
 
