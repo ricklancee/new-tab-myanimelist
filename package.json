@@ -1,22 +1,22 @@
 {
   "name": "new-tab-myanimelist",
-  "version": "1.0.0",
-  "description": "",
-  "main": "card.js",
+  "version": "0.1.0",
+  "description": "Replaces chrome's new tab with your list from myanimelist.net",
   "scripts": {
     "build": "./node_modules/.bin/webpack -p",
-    "watch": "./node_modules/.bin/webpack --progress --colors --watch"
+    "watch": "./node_modules/.bin/webpack --progress --colors --watch",
+    "zip": "rm package.zip && zip -r package.zip . -x '.DS_Store' -x *.git* 'node_modules/*' -x 'id/*'"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ricklancee/weekly.moe.git"
+    "url": "git+https://github.com/ricklancee/myanimelist-chrome-extension.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Rick Lancee",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ricklancee/weekly.moe/issues"
+    "url": "https://github.com/ricklancee/myanimelist-chrome-extension/issues"
   },
-  "homepage": "https://github.com/ricklancee/weekly.moe#readme",
+  "homepage": "https://github.com/ricklancee/myanimelist-chrome-extension#readme",
   "devDependencies": {
     "babel-core": "^6.22.1",
     "babel-loader": "^6.2.10",
