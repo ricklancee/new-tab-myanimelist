@@ -60,8 +60,6 @@ export default function cardContainer(services, card, refSelector, list) {
       renderNextStatePartial();
     }
   };
-  window.addEventListener('scroll', handleLoadingOfNextStateOnScroll, { passive: true });
-  window.addEventListener('resize', () => { windowHeight = window.innerHeight }, { passive: true });
 
   const filter = function(status = 'watching', season = 'all', year = 'all') {
     filters.status = status;
@@ -239,6 +237,9 @@ export default function cardContainer(services, card, refSelector, list) {
       throw new Error('register(): rootNode already set, cannot register component');
 
     rootNode = document.querySelector(refSelector);
+
+    window.addEventListener('scroll', handleLoadingOfNextStateOnScroll, { passive: true });
+    window.addEventListener('resize', () => { windowHeight = window.innerHeight }, { passive: true });
 
     let status = 'watching';
     let season = 'all';
