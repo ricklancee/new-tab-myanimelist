@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+  "name": "New tab: Myanimelist",
+  "description": "Show your anime list in a new tab",
+  "version": "1.0",
+  "chrome_url_overrides" : {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "https://myanimelist.net/"
+  ]
+}

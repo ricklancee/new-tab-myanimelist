@@ -1,109 +1,71 @@
 'use strict';
 
-import card from './card';
-import cardContainer from './cardContainer';
 import actions from './actions';
+import card from './components/card';
+import cardContainer from './components/cardContainer';
+import loader from './components/loader';
+import login from './components/login';
+import { default as toaster } from './components/toast';
 
-export default function core(services) {
+export default async function core(services) {
   console.info('initialize with ', services);
 
   const provider = services.providers.mal;
 
   // Bootstrap the application
   console.info('initialize app...');
-  actions(services.bus, provider);
+  const loginComponent = login(services, provider, '[data-ref="login"]');
+  loginComponent.register();
 
-  console.info('Get settings from storage...');
-  const settings = services.storage.getItem('app.settings');
-  const user = services.storage.getItem('app.user');
-  const cachedList = services.storage.getItem('app.list');
-
-  let prompt = false;
-  if (!settings || !settings.loggedIn) {
-    console.info('No settings found, or user is not logged in, prompting user...');
-    prompt = true;
-  }
+  const user = await loginComponent.loginOrPrompt();
 
   let list = [];
+  const cachedList = services.storage.getItem(`app.${user.username}.list`);
 
   if (cachedList) {
-    console.info('Using cached list.');
+    console.info('Using cached list...');
     list = JSON.parse(cachedList);
   }
 
-  let status = 'watching';
-  let season = 'all';
-  let year = 'all';
+  actions(services, provider, user, list);
 
-  // Container event handlers.
-  const containerEl = document.querySelector(".card-container");
-  const container = cardContainer(services, card, containerEl, list);
+  // Register components.
+  console.log('Registering components...');
+  const toast = toaster(services, '[data-ref="toast"]');
+  const appLoadIcon = loader(services, '[data-ref="loader"]');
+  const container = cardContainer(services, card, '[data-ref="cardContainer"]', list);
 
-  const filterStatusElements = document.querySelectorAll('[data-filter-status]');
-  const filterCurrentSeason = document.querySelector('[data-filter-season="current"]');
-  const filterAllSeasons = document.querySelector('[data-filter-season="all"]');
+  // Bootstrap components
+  appLoadIcon.register();
+  container.register();
+  toast.register();
 
-  document.querySelector('[data-filter-status="'+ status +'"]').classList.add('active');
-  filterAllSeasons.classList.add('active');
+  services.bus.emit('app:isDoingSomeWork');
+  provider.list.get().then(data => {
+    console.info('Fetched list from provider.');
 
-  const handleFilterCurrentSeasonClick = function(event) {
-    filterAllSeasons.classList.remove('active');
-    event.target.classList.add('active');
+    services.bus.emit('app:isDoneDoingSomeWork');
 
-    season = 'winter';
-    year = 2017;
+    // Update the container state list only if there are changes
+    const json = JSON.stringify(data);
 
-    container.filter(status, season, year);
-    container.render();
-  };
-
-  const handleFilterAllSeasonsClick = function(event) {
-    filterCurrentSeason.classList.remove('active');
-    event.target.classList.add('active');
-
-    season = 'all';
-    year = 'all';
-
-    container.filter(status, season, year);
-    container.render();
-  };
-
-  const handleFilterStatusClick = function(event) {
-    status = event.target.getAttribute('data-filter-status');
-
-    filterStatusElements.forEach(el => el.classList.remove('active'));
-    event.target.classList.add('active');
-
-    container.filter(status, season, year);
-    container.render();
-  };
-
-  filterStatusElements.forEach(el => el.addEventListener('click', handleFilterStatusClick));
-
-  filterCurrentSeason.addEventListener('click', handleFilterCurrentSeasonClick);
-  filterAllSeasons.addEventListener('click', handleFilterAllSeasonsClick);
-
-  if (cachedList) {
-    container.filter(status, season, year);
-    container.render();
-  }
-
-  services.providers.mal.list.get().then(data => {
-    // console.info('Fetched list from provider.');
-
-    // console.log(data.length, list.length);
-    // // Update the container state list only if there are changes
-    // const json = JSON.stringify(data);
-    // if (cachedList !== json) {
-    //   container.updateState(data);
-    //   // Recache list.
-    //   services.storage.setItem('app.list', json);
-    // }
-
+    if (!cachedList) {
+      console.info('Updating list from empty cache');
+      services.storage.setItem(`app.${user.username}.list`, json);
+      container.updateState(data);
+      container.render();
+    } else if (cachedList !== json) {
+      console.info('List updated, resetting cache with new list');
+      services.storage.setItem(`app.${user.username}.list`, json);
+      container.updateState(data);
+      container.render();
+      toast.show('Your list on MAL was updated, changes are reflected here.', [], 3000);
+    } else {
+      console.info('List the same, using cached list');
+    }
+  }).catch(err => {
+    services.bus.emit('app:isDoneDoingSomeWork');
+    toast.show('Failed to retrieve list from MAL. See console for errors', [], 3000);
+    console.error(err);
   });
-
-  // console.log('Checking if logged in...');
-  // If not prompt log in -> store credentials if remember is on.
-  // If logged in: get anime data from storage
-  // Do background fetch to update -> show spinner for this ?.
 };

@@ -1,6 +1,6 @@
 'use strict';
 
-export default function actions(bus, provider) {
+export default function actions({bus, storage}, provider, user, list) {
   const changes = {};
 
   let queue = {};
@@ -8,19 +8,29 @@ export default function actions(bus, provider) {
     if (!queue[channel]) queue[channel] = {};
 
     clearTimeout(queue[channel].timeout);
-    queue[channel].timeout = setTimeout(cb, 350);
+    queue[channel].timeout = setTimeout(cb, 200);
   };
 
   bus.when('card:changed', (cardState) => {
-    console.info('A card changed:', cardState);
+    // console.info('A card changed:', cardState);
   });
 
   bus.when('anime:currentEpisodeChanged', (data) => {
     console.info('Episode count changed:', data);
 
     queuePop('updateEpisodeCount', () => {
-      console.log(data.id, data.currentEpisode);
-      provider.updateEpisodeCount(data.id, data.currentEpisode);
+      bus.emit('app:isDoingSomeWork');
+
+      // const currentCache = storage.getItem('app.list');
+      const newCache = JSON.stringify(list);
+
+      storage.setItem(`app.${user.username}.list`, newCache);
+
+      provider.updateEpisodeCount(data.id, data.currentEpisode).then(_ => {
+        bus.emit('app:isDoneDoingSomeWork');
+
+        // if failed revert cache, check with timestamps? which ever is newer?
+      });
     });
   });
 };

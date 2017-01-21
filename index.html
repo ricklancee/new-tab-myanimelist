@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Weekly.moe ❤</title>
+    <title>New tab: Myanimelist ❤</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="./app.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Work+Sans:400,700" rel="stylesheet">
   </head>
   <body>
     <header class="app-header">
-      <a href="/" class="brandmark">
-        <h1>Weekly.moe<span class="heart">❤</span></h1>
-        <p>An anime list</p>
-      </a>
+      <div class="brandmark">
+        <h1>New tab: MyAnimeList<span class="heart">❤</span></h1>
+      </div>
+      <a href="#" data-ref="logout">Logout</a>
     </header>
     <main class="app-content">
       <div class="filters">
@@ -28,11 +27,41 @@
         <div class="filter-season">
           <span>Season:<span>
           <button data-filter-season="all">All</button>
-          <button data-filter-season="current">Winter 2017</button>
+          <button data-filter-season="current" data-season="" data-year="">Current Season</button>
         </div>
       </div>
-      <ul class="card-container"></ul>
+      <ul class="card-container" data-ref="cardContainer"></ul>
     </main>
+    <div class="login" data-ref="login">
+      <div>
+        <form>
+          <h4>Login to MyAnimeList.net</h4>
+          <label>Your Mal Username</label>
+          <input type="text" placeholder="Moefreak" name="username" required>
+          <label>Your MAL password</label>
+          <input type="password" placeholder="Woolyunderpants123" name="password" required>
+          <p data-ref="error" class="error">Failed to login into Myanimelist, try again</p>
+          <div class="submit">
+            <div class="spinner">
+              <div class="rect1"></div>
+              <div class="rect2"></div>
+              <div class="rect3"></div>
+              <div class="rect4"></div>
+              <div class="rect5"></div>
+            </div>
+            <button type="submit"><span>Login</span></button>
+          </div>
+          <p>
+            Your username and password are stored locally in the browser as plain text.
+          </p>
+        </form>
+      </div>
+    </div>
+    <div class="loader" data-ref="loader" title="Application is loading..."></div>
+    <div class="toast" data-ref="toast">
+      <p></p>
+      <div class="toast__controls"></div>
+    </div>
     <script src="./bundle.js"></script>
   </body>
 </html>

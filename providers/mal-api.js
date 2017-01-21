@@ -202,7 +202,7 @@ export default class MALjs {
 
     _get(url) {
       return new Promise((resolve, reject) => {
-          this._getForBrowser(url, resolve, reject);
+        this._getForBrowser(url, resolve, reject);
       });
     }
 
@@ -219,12 +219,12 @@ export default class MALjs {
             .catch(reject);
 
         } else {
-          reject('request failed');
+          reject(`Request failed: called url "${url}", with user "${this._user}" and password "${this._password}"`);
         }
       };
 
       req.onerror = () => {
-        reject('request failed');
+        reject(`Request failed: called url "${url}", with user "${this._user}" and password "${this._password}"`);
       };
 
       req.send();
@@ -250,7 +250,7 @@ export default class MALjs {
       };
 
       req.onerror = function() {
-        reject('request failed');
+        reject(`Request failed: Called url "${url}", with user "${this._user}" and password "${this._password}". Data passed: "${JSON.stringify(data, null, 2)}"`);
       };
 
       if (data) {

@@ -1,30 +1,27 @@
 'use strict';
 
-import { list } from '../list-data';
 import MALjs from './mal-api';
 
-const seasons = {
-  winter: new Date('2017-01-01')
-};
-
 export default function mal() {
-  const api = new MALjs('apitest1234', 'OXtmfmalpoHU');
+  let api;
 
   return {
+    setCredentials: function (username, password) {
+      api = new MALjs(username, password);
+    },
+
     authenticate: (username, password) => {
-      return Promise.resolve(true);
+      api = new MALjs(username, password);
+      return api.verifyCredentials();
     },
 
     updateEpisodeCount: (id, episode) => {
-      console.warn('TEMP DISABLED');
-      return;
-
       if (!id || !episode)
-        return;
+        return Promise.reject('Error: No episode id or episode number given.');
 
       return api.anime.update(id, {
         episode: episode
-      }).then(result => console.log(result));
+      });
     },
 
     list: function() {
@@ -39,18 +36,9 @@ export default function mal() {
         episodeCount: parseInt(anime.series_episodes, 10) ? parseInt(anime.series_episodes, 10) : null,
       });
 
-      const data = list.map(formatData);
-
       const get = function() {
-        return new Promise(resolve => {
-          setTimeout(() => {
-            console.warn('Fetched fake data');
-            resolve(data);
-          }, 545);
-
-          // api.anime.list().then(data => {
-          //   resolve(data.myanimelist.anime.map(formatData));
-          // });
+        return api.anime.list().then(data => {
+          return Promise.resolve(data.myanimelist.anime.map(formatData));
         });
       };
 

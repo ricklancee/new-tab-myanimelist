@@ -29,7 +29,7 @@ export default function card({ toHtml, bus }, refElement, anime) {
           <p data-ref="title">${ anime.title }</p>
         </div>
         <figure class="card__image-container">
-          <a href="https://myanimelist.net/anime/${anime.id}" class="card__link">
+          <a href="https://myanimelist.net/anime/${anime.id}" target="_blank" class="card__link">
             <img data-ref="image" src="${anime.image}" alt="${anime.title}">
           </a>
         </figure>
