@@ -4,18 +4,22 @@ import core from './core';
 
 // Providers
 import mal from './providers/mal';
+import aniList from './providers/anilist';
 
 // Utilities
 import mediator from './mediator';
+import moment from 'moment';
 import toHtml from 'string-to-html';
 
 const services = {
   toHtml,
   providers: {
-    mal: mal()
+    mal: mal(),
+    aniList: aniList(localStorage)
   },
   storage: localStorage,
-  bus: mediator()
+  bus: mediator(),
+  date: moment
 };
 
 export default function shell(opts = { log: false }) {

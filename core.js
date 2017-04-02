@@ -22,9 +22,23 @@ export default function core(services) {
     let list = [];
     const cachedList = services.storage.getItem(`app.${user.username}.list`);
 
+    // Get anime airing dates
+    services.bus.when('app:listWasFetched', function(list) {
+      const watching = list.filter(anime => anime.status === 1)
+        .map(anime => anime.title);
+
+      services.providers.aniList.getAiringDatesByTitles(watching).then(dates => {
+        dates.forEach(date => {
+          const id = list.find(anime => anime.title === watching[date.index]).id;
+          services.bus.emit('anime:changed', { id }, {airing: date.airing});
+        });
+      });
+    });
+
     if (cachedList) {
       console.info('Using cached list...');
       list = JSON.parse(cachedList);
+      services.bus.emit('app:listWasFetched', list);
     }
 
     actions(services, provider, user, list);
@@ -44,8 +58,6 @@ export default function core(services) {
     provider.list.get().then(data => {
       console.info('Fetched list from provider.');
 
-      services.bus.emit('app:isDoneDoingSomeWork');
-
       // Update the container state list only if there are changes
       const json = JSON.stringify(data);
 
@@ -54,15 +66,19 @@ export default function core(services) {
         services.storage.setItem(`app.${user.username}.list`, json);
         container.updateState(data);
         container.render();
+
+        services.bus.emit('app:listWasFetched', data);
       } else if (cachedList !== json) {
         console.info('List updated, resetting cache with new list');
         services.storage.setItem(`app.${user.username}.list`, json);
         container.updateState(data);
         container.render();
-        toast.show('Your list on MAL was updated, changes are reflected here.', [], 3000);
+        services.bus.emit('app:listWasFetched', data);
       } else {
         console.info('List the same, using cached list');
       }
+
+      services.bus.emit('app:isDoneDoingSomeWork');
     }).catch(err => {
       services.bus.emit('app:isDoneDoingSomeWork');
       toast.show('Failed to retrieve list from MAL. See console for errors', [], 3000);

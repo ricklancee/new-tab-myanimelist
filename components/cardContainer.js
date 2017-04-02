@@ -245,8 +245,6 @@ export default function cardContainer(services, card, refSelector, list) {
     let season = 'all';
     let year = 'all';
 
-    filter(status, season, year);
-
     // Container event handlers.
     const filterStatusElements = document.querySelectorAll('[data-filter-status]');
     const filterCurrentSeason = document.querySelector('[data-filter-season="current"]');
@@ -299,6 +297,7 @@ export default function cardContainer(services, card, refSelector, list) {
     filterCurrentSeason.addEventListener('click', handleFilterCurrentSeasonClick);
     filterAllSeasons.addEventListener('click', handleFilterAllSeasonsClick);
 
+    filter(status, season, year);
     render();
   };
 

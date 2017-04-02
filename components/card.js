@@ -1,6 +1,6 @@
 'use strict';
 
-export default function card({ toHtml, bus }, refElement, anime) {
+export default function card({ toHtml, bus, date }, refElement, anime) {
   let rootNode;
 
   let elements = {};
@@ -22,12 +22,37 @@ export default function card({ toHtml, bus }, refElement, anime) {
       });
   };
 
+  const formatCountdown = function() {
+    if (!anime.airing) return;
+
+    const airDate = anime.airing.time;
+    const airs = date(airDate);
+    const today = date();
+
+    if (airs.isBetween(today.startOf('day'), today.endOf('day'))) {
+      return 'Airs today ' + airs.from(today);;
+    }
+
+    if(airs.diff(today, 'days') === 6) {
+      return 'Aired today';
+    }
+
+    const dayOfTheWeek = airs.format("dddd");
+
+    return 'Airs '+ dayOfTheWeek + 's (' + airs.from(today, true) +' left)';
+  };
+
+  const airedToday = function() {
+
+  };
+
   const cardTemplate = function(anime) {
     const template = `
       <div class="card card--showTitleOnHover isStatus-${anime.status}" data-id="${anime.id}">
         <div class="card__title">
           <p data-ref="title">${ anime.title }</p>
         </div>
+        <div class="card__airing${ anime.airing ? ' isShown' : ''}" data-ref="airing">${ anime.airing ? formatCountdown() : '' }</div>
         <figure class="card__image-container">
           <a href="https://myanimelist.net/anime/${anime.id}" target="_blank" class="card__link">
             <img data-ref="image" src="${anime.image}" alt="${anime.title}">
@@ -57,6 +82,9 @@ export default function card({ toHtml, bus }, refElement, anime) {
       showCompleteButton();
       return;
     }
+
+    if (state.currentEpisode === anime.episodeCount -1)
+      elements.episodeCount.classList.add('completed');
 
     state.currentEpisode = state.currentEpisode + 1;
     updateCard();
@@ -88,6 +116,24 @@ export default function card({ toHtml, bus }, refElement, anime) {
     elements.image.src = state.image;
     elements.image.alt = state.title;
     elements.title.textContent = state.title;
+    if (state.airing) {
+      const updateTimer = function() {
+        elements.airing.classList.add('isShown');
+        elements.airing.textContent = formatCountdown(state.airing.time);
+      };
+
+      setInterval(updateTimer, 1000 * 60);
+      updateTimer();
+
+      if (state.airing.next_episode) {
+        if (state.airing.next_episode - 1 !== anime.currentEpisode)
+          elements.episodeCount.classList.add('next-episode');
+
+        elements.episodeCount.textContent = state.airing.next_episode - 1;
+        anime.episodeCount = state.airing.next_episode - 1;
+      }
+
+    }
   };
 
   const showCompleteButton = function() {
@@ -107,6 +153,7 @@ export default function card({ toHtml, bus }, refElement, anime) {
     elements.input = rootNode.querySelector('[data-ref="input"]');
     elements.image = rootNode.querySelector('[data-ref="image"]');
     elements.title = rootNode.querySelector('[data-ref="title"]');
+    elements.airing = rootNode.querySelector('[data-ref="airing"]');
 
     rootNode.querySelector('[data-ref="increment"]').addEventListener('click', incrementEpisode);
     rootNode.querySelector('[data-ref="decrement"]').addEventListener('click', decrementEpisode);
@@ -125,6 +172,7 @@ export default function card({ toHtml, bus }, refElement, anime) {
   // update the state of the card.
   bus.when('anime:changed', { id: anime.id }, function(newState) {
     // Copy the newState's properties on the current state.
+    console.log('card is updated!', newState);
     updateState(newState);
     updateCard();
   });

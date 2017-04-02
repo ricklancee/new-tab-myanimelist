@@ -3,5 +3,5 @@
 import shell from './shell';
 
 shell({
-  log: false
+  log: true
 });

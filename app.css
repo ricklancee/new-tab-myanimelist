@@ -258,6 +258,22 @@ filter-season {
   visibility: visible;
 }
 
+.card__airing {
+  position: absolute;
+  display: none;
+  right: 0;
+  top: 250px;
+  font-size: 10px;
+  padding: 0.5em 1em;
+  background: #18A939;
+  color: #fff;
+  text-align: center;
+  opacity: 0.95;
+}
+.card__airing.isShown {
+  display: block;
+}
+
 .card__controls {
   position: relative;
   display: flex;
@@ -355,11 +371,21 @@ filter-season {
   display: block;
 }
 
+.card__episode-count .episode-count__episodes .next-episode {
+  color: #18A939;
+  font-weight: bold;
+}
+
+.card__episode-count .episode-count__episodes .completed {
+  color: inherit;
+  font-weight: normal;
+}
+
 /* Compenent: loader  */
 .loader {
   position: fixed;
-  left: 0.5em;
-  bottom: 0.5em;
+  right: 1em;
+  bottom: 1em;
   display: block;
   width: 20px;
   height: 20px;
@@ -375,10 +401,10 @@ filter-season {
 
 @keyframes loading {
   0% {
+    -webkit-transform: scale(0);
     transform: scale(0);
-    opacity: 1;
-  }
-  100% {
+  } 100% {
+    -webkit-transform: scale(1.0);
     transform: scale(1.0);
     opacity: 0;
   }
