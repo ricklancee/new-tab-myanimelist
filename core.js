@@ -25,11 +25,11 @@ export default function core(services) {
     // Get anime airing dates
     services.bus.when('app:listWasFetched', function(list) {
       const watching = list.filter(anime => anime.status === 1)
-        .map(anime => anime.title);
+        .map(anime => [anime.title, ...anime.synonyms]);
 
       services.providers.aniList.getAiringDatesByTitles(watching).then(dates => {
         dates.forEach(date => {
-          const id = list.find(anime => anime.title === watching[date.index]).id;
+          const id = list.find(anime => anime.title === watching[date.index][0]).id;
           services.bus.emit('anime:changed', { id }, {airing: date.airing});
         });
       });

@@ -78,6 +78,23 @@ export default function anilist(storage) {
           .toLowerCase();
   };
 
+  const findIndexOfMatchingTitles = function(listsOfTitles, toCheckAgainst) {
+
+    const index = listsOfTitles.findIndex(function(titles) {
+      for (let i = 0; i < titles.length; i++) {
+        for(let k = 0; k < toCheckAgainst.length; k++) {
+          if (titles[i] === toCheckAgainst[k]) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    });
+
+    return index;
+  };
+
   const getAiringDatesByTitles = function(titles) {
     return getClientCredentialsToken().then(token => {
 
@@ -98,25 +115,40 @@ export default function anilist(storage) {
       .then(response => response.json())
       .then(result => {
         let found = [];
-        titles = titles.map(formatTitle);
+        titles = titles.map(x => x.map(formatTitle));
 
         result.forEach(anime => {
-          if (
-            titles.indexOf(formatTitle(anime.title_romaji)) !== -1 ||
-            titles.indexOf(formatTitle(anime.title_english)) !== -1 ||
-            titles.indexOf(formatTitle(anime.title_japanese)) !== -1
-          ) {
-            const index = titles.findIndex(title => title === formatTitle(anime.title_romaji));
-            return found.push({ index, airing: anime.airing });
+          const toCheck = [
+            anime.title_romaji,
+            anime.title_english,
+            anime.title_japanese,
+            ...anime.synonyms
+          ].map(formatTitle);
+
+          const match = findIndexOfMatchingTitles(titles, toCheck);
+          // console.log(math)
+
+          if (match > -1) {
+            console.log('mmmm', match, titles[match], anime);
+            found.push({ index: match, airing: anime.airing });
           }
 
-          const synonyms = anime.synonyms.map(formatTitle);
-          for (let synonym of synonyms) {
-            if (titles.indexOf(synonym) !== -1) {
-              const index = titles.findIndex(title => title === synonym);
-              return found.push({ index, airing:anime.airing });
-            }
-          }
+          // if (
+          //   titles.indexOf(formatTitle(anime.title_romaji)) !== -1 ||
+          //   titles.indexOf(formatTitle(anime.title_english)) !== -1 ||
+          //   titles.indexOf(formatTitle(anime.title_japanese)) !== -1
+          // ) {
+          //   const index = titles.findIndex(title => title === formatTitle(anime.title_romaji));
+          //   return found.push({ index, airing: anime.airing });
+          // }
+
+          // const synonyms = anime.synonyms.map(formatTitle);
+          // for (let synonym of synonyms) {
+          //   if (titles.indexOf(synonym) !== -1) {
+          //     const index = titles.findIndex(title => title === synonym);
+          //     return found.push({ index, airing:anime.airing });
+          //   }
+          // }
         });
 
         return Promise.resolve(found);

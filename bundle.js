@@ -15593,6 +15593,8 @@ function toast(_ref, refSelector) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = core;
 
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 
 
 
@@ -15620,13 +15622,13 @@ function core(services) {
       var watching = list.filter(function (anime) {
         return anime.status === 1;
       }).map(function (anime) {
-        return anime.title;
+        return [anime.title].concat(_toConsumableArray(anime.synonyms));
       });
 
       services.providers.aniList.getAiringDatesByTitles(watching).then(function (dates) {
         dates.forEach(function (date) {
           var id = list.find(function (anime) {
-            return anime.title === watching[date.index];
+            return anime.title === watching[date.index][0];
           }).id;
           services.bus.emit('anime:changed', { id: id }, { airing: date.airing });
         });
@@ -15844,7 +15846,7 @@ var mediator = function mediator() {
 /* harmony export (immutable) */ __webpack_exports__["a"] = anilist;
 
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function anilist(storage) {
   var clientId = 'aardappeltaart-cmqds';
@@ -15917,6 +15919,23 @@ function anilist(storage) {
     return title.replace(/\s+/g, '').replace('-', '').replace('_', '').replace(':', '').replace(/'|"/, '').toLowerCase();
   };
 
+  var findIndexOfMatchingTitles = function findIndexOfMatchingTitles(listsOfTitles, toCheckAgainst) {
+
+    var index = listsOfTitles.findIndex(function (titles) {
+      for (var i = 0; i < titles.length; i++) {
+        for (var k = 0; k < toCheckAgainst.length; k++) {
+          if (titles[i] === toCheckAgainst[k]) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    });
+
+    return index;
+  };
+
   var getAiringDatesByTitles = function getAiringDatesByTitles(titles) {
     return getClientCredentialsToken().then(function (token) {
 
@@ -15937,54 +15956,37 @@ function anilist(storage) {
         return response.json();
       }).then(function (result) {
         var found = [];
-        titles = titles.map(formatTitle);
+        titles = titles.map(function (x) {
+          return x.map(formatTitle);
+        });
 
         result.forEach(function (anime) {
-          if (titles.indexOf(formatTitle(anime.title_romaji)) !== -1 || titles.indexOf(formatTitle(anime.title_english)) !== -1 || titles.indexOf(formatTitle(anime.title_japanese)) !== -1) {
-            var index = titles.findIndex(function (title) {
-              return title === formatTitle(anime.title_romaji);
-            });
-            return found.push({ index: index, airing: anime.airing });
+          var toCheck = [anime.title_romaji, anime.title_english, anime.title_japanese].concat(_toConsumableArray(anime.synonyms)).map(formatTitle);
+
+          var match = findIndexOfMatchingTitles(titles, toCheck);
+          // console.log(math)
+
+          if (match > -1) {
+            console.log('mmmm', match, titles[match], anime);
+            found.push({ index: match, airing: anime.airing });
           }
 
-          var synonyms = anime.synonyms.map(formatTitle);
-          var _iteratorNormalCompletion = true;
-          var _didIteratorError = false;
-          var _iteratorError = undefined;
+          // if (
+          //   titles.indexOf(formatTitle(anime.title_romaji)) !== -1 ||
+          //   titles.indexOf(formatTitle(anime.title_english)) !== -1 ||
+          //   titles.indexOf(formatTitle(anime.title_japanese)) !== -1
+          // ) {
+          //   const index = titles.findIndex(title => title === formatTitle(anime.title_romaji));
+          //   return found.push({ index, airing: anime.airing });
+          // }
 
-          try {
-            var _loop = function _loop() {
-              var synonym = _step.value;
-
-              if (titles.indexOf(synonym) !== -1) {
-                var _index = titles.findIndex(function (title) {
-                  return title === synonym;
-                });
-                return {
-                  v: found.push({ index: _index, airing: anime.airing })
-                };
-              }
-            };
-
-            for (var _iterator = synonyms[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-              var _ret = _loop();
-
-              if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-            }
-          } catch (err) {
-            _didIteratorError = true;
-            _iteratorError = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion && _iterator.return) {
-                _iterator.return();
-              }
-            } finally {
-              if (_didIteratorError) {
-                throw _iteratorError;
-              }
-            }
-          }
+          // const synonyms = anime.synonyms.map(formatTitle);
+          // for (let synonym of synonyms) {
+          //   if (titles.indexOf(synonym) !== -1) {
+          //     const index = titles.findIndex(title => title === synonym);
+          //     return found.push({ index, airing:anime.airing });
+          //   }
+          // }
         });
 
         return Promise.resolve(found);
@@ -16333,6 +16335,9 @@ function mal() {
         return {
           id: parseInt(anime.series_animedb_id, 10),
           title: anime.series_title,
+          synonyms: anime.series_synonyms.split('; ').filter(function (title) {
+            return title.trim();
+          }),
           image: anime.series_image,
           starts: anime.series_start,
           ends: anime.series_end,

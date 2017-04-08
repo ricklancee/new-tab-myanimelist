@@ -427,7 +427,7 @@ filter-season {
   color: #fff;
   will-change: transform;
   transform: translateY(calc(100% + 1em));
-  transition: transform 0.15s cubic-bezier(0, 0.71, 0.7, 0.87);
+  transition: transform 0.225s cubic-bezier(0.0, 0.0, 0.2, 1);
 }
 .toast.isShown {
   transform: translateY(0);

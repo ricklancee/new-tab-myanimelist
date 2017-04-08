@@ -28,6 +28,7 @@ export default function mal() {
       const formatData = anime => ({
         id: parseInt(anime.series_animedb_id, 10),
         title: anime.series_title,
+        synonyms: anime.series_synonyms.split('; ').filter(title => title.trim()),
         image: anime.series_image,
         starts: anime.series_start,
         ends: anime.series_end,
