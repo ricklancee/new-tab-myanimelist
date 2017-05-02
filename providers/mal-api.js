@@ -58,7 +58,7 @@ export default class MALjs {
 
     list(type) {
       this._checkType(type);
-      return this._get(`${this._base}/malappinfo.php?u=${this._user}&status=all&type=${type}`);
+      return this._get(`${this._base}/malappinfo.php?u=${this._user}&status=all&type=${type}`, false);
     }
 
     add(id, data, type) {
@@ -200,64 +200,66 @@ export default class MALjs {
       return xmlString;
     }
 
-    _get(url) {
+    _get(url, auth=true) {
       return new Promise((resolve, reject) => {
-        this._getForBrowser(url, resolve, reject);
-      });
-    }
+        const req = new XMLHttpRequest();
 
-    _getForBrowser(url, resolve, reject) {
-      var req = new XMLHttpRequest();
-      req.open('GET', url, true, this._user, this._password);
-      req.onload = () => {
-        if (req.status === 200) {
-          const data = req.response;
+        if (auth)
+          req.open('GET', url, true, this._user, this._password);
+        else
+          req.open('GET', url);
 
-          // Covert the xml string to json
-          this._xmlToJson(data)
-            .then(resolve)
-            .catch(reject);
+        req.onload = () => {
+          if (req.status === 200) {
+            const data = req.response;
 
-        } else {
+            // Covert the xml string to json
+            this._xmlToJson(data)
+              .then(resolve)
+              .catch(reject);
+
+          } else {
+            reject(`Request failed: called url "${url}", with user "${this._user}" and password "${this._password}"`);
+          }
+        };
+
+        req.onerror = () => {
           reject(`Request failed: called url "${url}", with user "${this._user}" and password "${this._password}"`);
-        }
-      };
+        };
 
-      req.onerror = () => {
-        reject(`Request failed: called url "${url}", with user "${this._user}" and password "${this._password}"`);
-      };
-
-      req.send();
-    }
-
-    _post(url, data=null) {
-      return new Promise((resolve, reject) => {
-        this._postForBrowser(url, data, resolve, reject);
+        req.send();
       });
     }
 
-    _postForBrowser(url, data, resolve, reject) {
-      var req = new XMLHttpRequest();
-      req.open('POST', url, true, this._user, this._password);
-      req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    _post(url, data=null, auth=true) {
+      return new Promise((resolve, reject) => {
+        const req = new XMLHttpRequest();
 
-      req.onload = function() {
-        if (req.status === 200 || req.status === 201) {
-          resolve(req.response);
+        if (auth)
+          req.open('POST', url, true, this._user, this._password);
+        else
+          req.open('POST', url);
+
+        req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+        req.onload = function() {
+          if (req.status === 200 || req.status === 201) {
+            resolve(req.response);
+          } else {
+            reject(req.response);
+          }
+        };
+
+        req.onerror = function() {
+          reject(`Request failed: Called url "${url}", with user "${this._user}" and password "${this._password}". Data passed: "${JSON.stringify(data, null, 2)}"`);
+        };
+
+        if (data) {
+          const xml = this._toXml(data);
+          req.send('data='+xml);
         } else {
-          reject(req.response);
+          req.send();
         }
-      };
-
-      req.onerror = function() {
-        reject(`Request failed: Called url "${url}", with user "${this._user}" and password "${this._password}". Data passed: "${JSON.stringify(data, null, 2)}"`);
-      };
-
-      if (data) {
-        var xml = this._toXml(data);
-        req.send('data='+xml);
-      } else {
-        req.send();
-      }
+      });
     }
   };

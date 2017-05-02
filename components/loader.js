@@ -6,7 +6,7 @@ export default function loader({ bus }, refSelector) {
   let isLoading = true;
 
   const show = function() {
-    console.info('loader:show() show a loader');
+    log.info('loader:show() show a loader');
     isLoading = true;
     thingsDoingWork++;
     rootNode.classList.add('isLoading');
@@ -17,7 +17,7 @@ export default function loader({ bus }, refSelector) {
       return;
 
     if (!-- thingsDoingWork) {
-      console.info('loader:hide() all loaders done');
+      log.info('loader:hide() all loaders done');
       rootNode.classList.remove('isLoading');
       isLoading = false;
     }

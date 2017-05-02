@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "A chrome extension that replaces your new tab window with your list from myanimelist.net",
   "scripts": {
-    "build": "./node_modules/.bin/webpack -p",
-    "watch": "./node_modules/.bin/webpack --progress --colors --watch",
+    "build": "webpack -p",
+    "watch": "webpack --progress --colors --watch",
     "zip": "rm package.zip && zip -r package.zip . -x '.DS_Store' -x *.git* 'node_modules/*' -x 'id/*'"
   },
   "repository": {
@@ -24,6 +24,7 @@
     "webpack": "^2.2.0-rc.7"
   },
   "dependencies": {
+    "moment": "^2.18.1",
     "string-to-html": "^1.0.1"
   }
 }

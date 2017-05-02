@@ -1,5 +1,18 @@
 'use strict';
 
+const bestGirls = [
+  'Bot-chan is best girl',
+  'your waifu is shit',
+  'Yui is best girl',
+  'Megumin is best girl',
+  'Misaka is best girl',
+  'Koko is best girl',
+  'Utaha is best girl',
+  'Mugi is best girl',
+  'Kikko is best girl',
+  'Tohsaka is best girl'
+];
+
 export default function login({ storage, bus }, provider, refSelector) {
   let rootNode = null;
   let loginForm = null;
@@ -59,7 +72,7 @@ export default function login({ storage, bus }, provider, refSelector) {
         rootNode.classList.remove('isLoading');
 
         if (result.user) {
-          console.info(`Successfully logged in user "${username}"`);
+          log.info(`Successfully logged in user "${username}"`);
 
           hideLoginPrompt();
 
@@ -100,6 +113,9 @@ export default function login({ storage, bus }, provider, refSelector) {
     errorElement = rootNode.querySelector('[data-ref="error"]');
     loginForm = rootNode.querySelector('form');
     logoutLink = document.querySelector('[data-ref="logout"]');
+
+    rootNode.querySelector('input[type="password"]').setAttribute('placeholder',
+      bestGirls[Math.floor(Math.random() * bestGirls.length)]);
 
     loginForm.addEventListener('submit', handleLoginFormSubmit);
     logoutLink.addEventListener('click', handleLogoutClick);

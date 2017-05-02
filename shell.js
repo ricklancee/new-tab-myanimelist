@@ -7,7 +7,7 @@ import mal from './providers/mal';
 import aniList from './providers/anilist';
 
 // Utilities
-import mediator from './mediator';
+import medi from './medi';
 import moment from 'moment';
 import toHtml from 'string-to-html';
 
@@ -18,29 +18,24 @@ const services = {
     aniList: aniList(localStorage)
   },
   storage: localStorage,
-  bus: mediator(),
+  bus: medi(),
   date: moment
 };
 
 export default function shell(opts = { log: false }) {
+  window.log = {
+      info() {
+        if (!opts.log)
+          return;
 
-  const info = window.console.info;
-  const log = window.console.log;
-  const warn = window.console.warn;
+        return console.info(...arguments);
+      },
+      warn() {
+        if (!opts.log)
+          return;
 
-  window.console.info = (...args) => {
-    if (opts.log === true || opts.log === 'INFO')
-      return info(...args);
-  };
-
-  window.console.log = (...args) => {
-    if (opts.log === true || opts.log === 'LOG')
-      return log(...args);
-  };
-
-  window.console.warn = (...args) => {
-    if (opts.log === true || opts.log === 'WARN')
-      return warn(...args);
+        return console.warn(...arguments);
+      }
   };
 
   return core(services);

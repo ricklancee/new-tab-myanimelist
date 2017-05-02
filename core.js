@@ -8,12 +8,12 @@ import login from './components/login';
 import { default as toaster } from './components/toast';
 
 export default function core(services) {
-  console.info('initialize with ', services);
+  log.info('initialize with ', services);
 
   const provider = services.providers.mal;
 
   // Bootstrap the application
-  console.info('initialize app...');
+  log.info('initialize app...');
   const loginComponent = login(services, provider, '[data-ref="login"]');
   loginComponent.register();
 
@@ -36,7 +36,7 @@ export default function core(services) {
     });
 
     if (cachedList) {
-      console.info('Using cached list...');
+      log.info('Using cached list...');
       list = JSON.parse(cachedList);
       services.bus.emit('app:listWasFetched', list);
     }
@@ -44,7 +44,7 @@ export default function core(services) {
     actions(services, provider, user, list);
 
     // Register components.
-    console.log('Registering components...');
+    log.info('Registering components...');
     const toast = toaster(services, '[data-ref="toast"]');
     const appLoadIcon = loader(services, '[data-ref="loader"]');
     const container = cardContainer(services, card, '[data-ref="cardContainer"]', list);
@@ -56,26 +56,26 @@ export default function core(services) {
 
     services.bus.emit('app:isDoingSomeWork');
     provider.list.get().then(data => {
-      console.info('Fetched list from provider.');
+      log.info('Fetched list from provider.');
 
       // Update the container state list only if there are changes
       const json = JSON.stringify(data);
 
       if (!cachedList) {
-        console.info('Updating list from empty cache');
+        log.info('Updating list from empty cache');
         services.storage.setItem(`app.${user.username}.list`, json);
         container.updateState(data);
         container.render();
 
         services.bus.emit('app:listWasFetched', data);
       } else if (cachedList !== json) {
-        console.info('List updated, resetting cache with new list');
+        log.info('List updated, resetting cache with new list');
         services.storage.setItem(`app.${user.username}.list`, json);
         container.updateState(data);
         container.render();
         services.bus.emit('app:listWasFetched', data);
       } else {
-        console.info('List the same, using cached list');
+        log.info('List the same, using cached list');
       }
 
       services.bus.emit('app:isDoneDoingSomeWork');

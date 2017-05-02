@@ -12,11 +12,11 @@ export default function actions({bus, storage}, provider, user, list) {
   };
 
   bus.when('card:changed', (cardState) => {
-    // console.info('A card changed:', cardState);
+    // log.info('A card changed:', cardState);
   });
 
   bus.when('anime:currentEpisodeChanged', (data) => {
-    console.info('Episode count changed:', data);
+    log.info('Episode count changed:', data);
 
     queuePop('updateEpisodeCount', () => {
       bus.emit('app:isDoingSomeWork');

@@ -26,11 +26,10 @@ export default function cardContainer(services, card, refSelector, list) {
     const seasonsByIndex = Object.keys(seasons);
     let index = 0;
 
-    console.log(month);
-
     for (let season in seasons) {
-      if (month >= seasons[season] && month < seasons[seasonsByIndex[index + 1]])
+      if (month >= seasons[season] && month < seasons[seasonsByIndex[index + 1]]) {
         return season;
+      }
       index++;
     }
     return false;
@@ -178,7 +177,7 @@ export default function cardContainer(services, card, refSelector, list) {
 
     if (!state.length) {
       rootNode.classList.add('isEmpty');
-      console.warn('! nothing found... show empty state!');
+      log.warn('! nothing found... show empty state!');
       return;
     }
     rootNode.classList.remove('isEmpty');
@@ -190,7 +189,7 @@ export default function cardContainer(services, card, refSelector, list) {
 
   const renderNextStatePartial = function() {
     if (renderedCards.length >= state.length) {
-      console.info('Completely rendered state to DOM.');
+      log.info('Completely rendered state to DOM.');
       return;
     }
 
@@ -223,7 +222,7 @@ export default function cardContainer(services, card, refSelector, list) {
   };
 
   const updateState = function(newState) {
-    console.info('updateState: Updating to new state.');
+    log.info('updateState: Updating to new state.');
     data = newState.slice();
 
     const sortedData = sortData(data);

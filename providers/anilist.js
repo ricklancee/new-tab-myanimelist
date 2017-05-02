@@ -62,7 +62,7 @@ export default function anilist(storage) {
     token = getToken();
 
     if (!token || Date.now() > token.expires + token.expires_in) {
-      console.info('getClientCredentialsToken: Refreshing token...');
+      log.info('getClientCredentialsToken: Refreshing token...');
       return fetchClientCredentialsToken();
     }
 
