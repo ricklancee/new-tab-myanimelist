@@ -1,0 +1,75 @@
+.ActionBar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.ActionBar__filter-status,
+.ActionBar__filter-season {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ActionBar__status-filter,
+.ActionBar__season-filter {
+  border: 0;
+  background: transparent;
+  padding: .25em 0.75em;
+  color: #000;
+  font-size: 1em;
+  margin-left: 0.5em;
+  cursor: pointer;
+  outline: 0;
+  border-bottom: 2px solid #000;
+}
+.ActionBar__status-filter:first-child,
+.ActionBar__season-filter:first-child {
+  margin-left: 0;
+}
+
+.ActionBar__status-filter--active,
+.ActionBar__season-filter--active {
+  background-color: #000;
+  color: #fff;
+}
+
+.ActionBar__status-filter--watching.ActionBar__status-filter--active {
+  background-color: #18A939;
+  color: #fff;
+}
+.ActionBar__status-filter--completed.ActionBar__status-filter--active {
+  background-color: #26448f;
+  color: #fff;
+}
+.ActionBar__status-filter--onhold.ActionBar__status-filter--active {
+  background-color: #f1c83e;
+  color: #fff;
+}
+.ActionBar__status-filter--dropped.ActionBar__status-filter--active {
+  background-color: #a12f31;
+  color: #fff;
+}
+.ActionBar__status-filter--plantowatch.ActionBar__status-filter--active {
+  background-color: #c3c3c3;
+  color: #fff;
+}
+
+.ActionBar__status-filter--all {
+  border-bottom-color: #000000;
+}
+.ActionBar__status-filter--watching {
+  border-bottom-color: #18A939;
+}
+.ActionBar__status-filter--completed {
+  border-bottom-color: #26448f;
+}
+.ActionBar__status-filter--onhold {
+  border-bottom-color: #f1c83e;
+}
+.ActionBar__status-filter--dropped {
+  border-bottom-color: #a12f31;
+}
+.ActionBar__status-filter--plantowatch {
+  border-bottom-color: #c3c3c3;
+}

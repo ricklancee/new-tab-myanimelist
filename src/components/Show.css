@@ -1,0 +1,217 @@
+/* Compenent: Show  */
+.Show {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 3px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, .12);
+  overflow: hidden;
+  width: 225px;
+  height: 325px;
+  border-bottom: inset 2px rgba(0, 0, 0, .12);
+  transition: border-color .3s ease-in;
+}
+
+.Show--status-is-watching {
+  border-bottom-color: #18A939;
+}
+.Show--status-is-completed {
+  border-color: #26448f;
+}
+.Show--status-is-onhold {
+  border-bottom-color: #f1c83e;
+}
+.Show--status-is-dropped {
+  border-bottom-color: #a12f31;
+}
+.Show--status-is-plantowatch {
+  border-bottom-color: #c3c3c3;
+}
+
+.Show__title {
+  position: absolute;
+  left: 0;
+  top: 0;
+  text-align: center;
+  font-weight: bold;
+  width: 100%;
+  height: auto;
+  padding: 1em 0.5em;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: #fff;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) -50%, rgba(0,0,0,0) 100%);
+  z-index: 2;
+}
+.Show__title h4 {
+  margin: 0;
+}
+
+.Show__title p {
+  margin: 0;
+}
+
+.Show--show-title-on-hover .Show__title {
+  visibility: hidden;
+}
+
+.Show--show-title-on-hover:hover .Show__title {
+  visibility: visible;
+}
+
+.Show__airing {
+  position: absolute;
+  display: none;
+  right: 0;
+  top: 250px;
+  font-size: 10px;
+  padding: 0.5em 1em;
+  background: #18A939;
+  color: #fff;
+  text-align: center;
+  opacity: 0.95;
+}
+.Show__airing.isShown {
+  display: block;
+}
+
+.Show__controls {
+  position: relative;
+  display: flex;
+  height: 40px;
+  background: #fff;
+}
+
+.Show__controls > .Show__episode-count {
+  flex: 1;
+}
+.Show__controls > button {
+  flex: 0 0 40px;
+}
+
+.Show__image-container {
+  display: block;
+  flex: 1;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+.Show__image-container img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.Show__episode-count {
+  text-align: center;
+}
+.Show__episode-count > div {
+  position: relative;
+}
+.Show__episode-count input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  text-align: center;
+}
+
+.Show__drawer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.Show__complete-button {
+  border-radius: 5px;
+  font-size: 0.875em;
+  border: 0;
+  background-color: #26448f;
+  color: #fff;
+  padding: 0.75em 3em;
+  transform: scale(0.95) translateY(0);
+  transition: transform 225ms 100ms cubic-bezier(0.0, 0.0, 0.2, 1),
+    scale 225ms 100ms cubic-bezier(0.0, 0.0, 0.2, 1);
+  cursor: pointer;
+  outline: 0;
+}
+.Show__complete-button:active {
+  background-color: #203b7d;
+}
+.Show__complete-button--shown {
+  transform: scale(1) translateY(-50px);
+}
+
+.Show__episode-button {
+  background: #EAEAEA;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+.Show__episode-button:active {
+  background: #c7c7c7;
+}
+
+.Show__episode-count {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.Show__episode-count .episode-count__input {
+  display: none;
+}
+
+.Show__episode-count .episode-count__title {
+  font-size: 10px;
+  display: block;
+}
+.Show__episode-count .episode-count__episodes {
+  font-size: 12px;
+  display: block;
+}
+
+.Show__episode-count .episode-count__episodes .next-episode {
+  color: #18A939;
+  font-weight: bold;
+}
+
+.Show__episode-count .episode-count__episodes .completed {
+  color: inherit;
+  font-weight: normal;
+}
+
+/** Component ShowContainer */
+.Show-container {
+  position: relative;
+  width: 100%;
+  margin-top: 1.5em;
+}
+
+.Show-container__Shows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.Show-container__Shows > li {
+  margin: 5px;
+}
+
+.Show-container.isEmpty:after {
+  margin-top: 3em;
+  content: 'Nothing found... ( >_<)';
+}
+
+

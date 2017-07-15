@@ -1,0 +1,42 @@
+.Header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 61.625rem;
+  width: 100%;
+  margin-top: 1em;
+  padding-left: 1em;
+  padding-right: 1em;
+  font-size: 14px;
+}
+
+.Header__logout {
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  padding-bottom: 0;
+  padding-top: 0;
+  color: #000;
+  outline: 0;
+}
+.Header__logout:hover {
+  text-decoration: none;
+}
+
+.brandmark {
+  text-decoration: none;
+}
+.brandmark h1 {
+  line-height: 1;
+  font-size: 22px;
+}
+.brandmark h1 .heart {
+  vertical-align: top;
+}
+
+.heart {
+  font-size: 10px;
+}
+.brandmark p {
+  font-size: 12px;
+}

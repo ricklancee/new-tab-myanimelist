@@ -1,0 +1,45 @@
+* {
+  margin: 0;
+  font-family: inherit;
+  line-height: inherit;
+  color: inherit;
+  box-sizing: inherit;
+}
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+html {
+  box-sizing: border-box;
+  background: #fff;
+  font-family: 'Work Sans', Helvetica, 'Helvetica Neue';
+  line-height: 1.5;
+  color: #000;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5em 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+ul li {
+  display: block;
+}
+
+button {
+  font-size: inherit;
+  cursor: pointer;
+}
+label {
+  display: block;
+}
+
