@@ -1,5 +1,5 @@
 import { storage } from './Store'
-import MALjs from './Api'
+import MALjs, { ListResponse } from './Api'
 import AniApi from './AniApi'
 
 type AiringData = {
@@ -21,7 +21,7 @@ export default class ListFetcher  {
   }
 
   public async getCachedListDataForUser(username: string) {
-    const cachedList = await storage.get(`app.${username}.list`) as object[]
+    const cachedList = await storage.get(`app.${username}.list`) as ListResponse[]
     this.airingData = await storage.get(`app.airing`) as AiringData[] || []
 
     this.idlelyFetchListForUser(username)
@@ -37,7 +37,7 @@ export default class ListFetcher  {
     this.callbacks.push(callback)
   }
 
-  public async getAiringDatesForShows(shows: any[]) {
+  public async getAiringDatesForShows(shows: ListResponse[]) {
     const airing = await this.fetchAiring()
     return new Promise(resolve => {
         const results = airing.reduce((responseArray, airingShow) => {
@@ -87,7 +87,7 @@ export default class ListFetcher  {
 
   private async idlelyFetchListForUser(username: string) {
     window.requestIdleCallback(() => {
-      this.malApi.anime.list().then((fetchedList: any[]) => {
+      this.malApi.anime.list().then((fetchedList: ListResponse[]) => {
         fetchedList = this.mergeWithAiringData(fetchedList)
         storage.set(`app.${username}.list`, fetchedList)
         this.callbacks.forEach(callback => callback(fetchedList))
@@ -104,8 +104,8 @@ export default class ListFetcher  {
           .toLowerCase()
   }
 
-  private mergeWithAiringData(list: any[]) {
-    return list.map((item: any) => {
+  private mergeWithAiringData(list: ListResponse[]) {
+    return list.map((item) => {
       const match = this.airingData.find(({id}) => id === item.series.id)
       if (!match) {
         return item
