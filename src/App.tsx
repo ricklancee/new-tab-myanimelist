@@ -66,10 +66,7 @@ class App extends React.Component<{}, State> {
     return (
       <div className="app">
         <Header onLogout={this.onLogout} />
-        {/* {this.state.user && (
-          <SeasonList />
-        )} */}
-
+        {/* <SeasonList /> */}
         <ListContainer user={this.state.user} />
       </div>
     )

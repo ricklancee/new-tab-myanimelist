@@ -14,6 +14,10 @@ export enum Status {
 export type ReadableStatus = 'watching'|'completed'|'plantowatch'|'dropped'|'onhold'
 
 interface Props {
+  seasonalData?: {
+    type: string
+    genres: string[]
+  }
   title: string
   image: string
   currentEpisode: number
@@ -96,7 +100,10 @@ export default class Show extends React.Component<Props, State> {
   }
 
   incrementEpisode() {
-    if (this.state.totalEpisodeCount !== 0 && this.state.currentEpisode >= this.state.totalEpisodeCount) {
+    if (
+      (this.state.totalEpisodeCount !== 0 && this.state.currentEpisode >= this.state.totalEpisodeCount) ||
+      (this.props.airing && this.state.currentEpisode >= this.props.airing.nextEpisode - 1)
+    ) {
       return
     }
 
@@ -152,7 +159,7 @@ export default class Show extends React.Component<Props, State> {
   }
 
   render() {
-    const { title, image, id, airing } = this.props
+    const { title, image, id, airing, seasonalData } = this.props
     const { status, totalEpisodeCount, currentEpisode, showCompleteButton } = this.state
 
     return (
@@ -170,32 +177,53 @@ export default class Show extends React.Component<Props, State> {
             <img src={image} alt={title} />
           </a>
         </figure>
-        <div className="Show__drawer">
-          <button
-            className={`Show__complete-button ${showCompleteButton ? 'Show__complete-button--shown' : ''}`}
-            onClick={this.complete}
-          >
-            Complete
-          </button>
-        </div>
-        <footer className="Show__controls">
-          <button className="Show__episode-button" onClick={this.decrementEpisode}>-</button>
-          <div className="Show__episode-count">
-            <div>
-              <span className="episode-count__title">Episodes seen:</span>
-              <span className="episode-count__episodes">
-                <span>{currentEpisode}</span>/
-                {airing ? (
-                  <span className="next-episode">{airing.nextEpisode}</span>
-                ) : (
-                  <span>{totalEpisodeCount ? totalEpisodeCount : '??'}</span>
-                )}
-
-              </span>
-            </div>
+        {!seasonalData && (
+          <div className="Show__drawer">
+            <button
+              className={`Show__complete-button ${showCompleteButton ? 'Show__complete-button--shown' : ''}`}
+              onClick={this.complete}
+            >
+              Complete
+            </button>
           </div>
-          <button className="Show__episode-button" onClick={this.incrementEpisode}>+</button>
-        </footer>
+        )}
+        {!seasonalData && (
+          <footer className="Show__controls">
+            <button className="Show__episode-button" onClick={this.decrementEpisode}>-</button>
+            <div className="Show__episode-count">
+              <div>
+                <span className="episode-count__title">Episodes seen:</span>
+                <span className="episode-count__episodes">
+                  <span>{currentEpisode}</span>/
+                  {airing ? (
+                    <span
+                      className={airing.nextEpisode - 1 > currentEpisode ? 'next-episode' : ''}
+                    >
+                      {airing.nextEpisode - 1}
+                    </span>
+                  ) : (
+                    <span>{totalEpisodeCount ? totalEpisodeCount : '??'}</span>
+                  )}
+
+                </span>
+              </div>
+            </div>
+            <button className="Show__episode-button" onClick={this.incrementEpisode}>+</button>
+          </footer>
+        )}
+        {seasonalData && (
+          <footer className="Show__information">
+            <div>
+              <span className="Show__genres" title={seasonalData.genres.filter(v => v).join(', ')}>
+                {seasonalData.genres.filter(v => v).join(', ')}
+              </span>
+              <span className="Show__type">{seasonalData.type}</span>
+            </div>
+            <div className="Show__episodes">
+              {airing ? airing.nextEpisode : 0}/{totalEpisodeCount ? totalEpisodeCount : '??'}
+            </div>
+          </footer>
+        )}
       </article>
     )
   }

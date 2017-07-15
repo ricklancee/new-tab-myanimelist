@@ -123,6 +123,10 @@ export default class SeasonList extends React.Component<{}, State> {
           {shows.map(show => {
             return <li key={show.id}>
                 <Show
+                  seasonalData={{
+                    genres: show.genres,
+                    type: show.type
+                  }}
                   title={show.title_romaji}
                   image={show.image_url_lge}
                   currentEpisode={0}

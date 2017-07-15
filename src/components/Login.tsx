@@ -24,6 +24,7 @@ const bestPass = [
   'Koko is best girl',
   'Utaha is best girl',
   'Mugi is best girl',
+  'B-b-b-baka~~~',
   'Kikko is best girl',
   'Tohsaka is best girl',
   'Watashi is best girl',
@@ -36,10 +37,10 @@ const weaboos = [
   'TrashySugoiGem',
   'JusticeLover26201',
   'KawaiiPartyGirl',
-  'Hentai_Power_Moon',
+  'Power_Moon',
   'EroAishiteruNoob',
   'MoeFreak',
-  'Zero_Hentai_Person',
+  'Zero_Person',
   'Nihon_Ero_San',
   'zomgSeppukuSama',
   'xxx_zomgPokemonSucks33333_xxx',
@@ -49,7 +50,7 @@ const weaboos = [
   'SanAishiteruWarrior',
   'Sushi99',
   'Royal_Hatsune_Sensei',
-  'Naked_Cupcake_Chan4444'
+  'Cupcake_Chan4444'
 ]
 
 export default class Login extends React.Component<Props, State> {

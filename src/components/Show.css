@@ -187,6 +187,39 @@
   font-weight: normal;
 }
 
+.Show__information {
+  display: flex;
+  height: 40px;
+}
+
+.Show__information > div:first-child {
+  min-width: 0;
+  flex: 1;
+  padding: 3px 5px;
+}
+
+.Show__type {
+  display: block;
+  font-size: 10px;
+}
+.Show__genres {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.Show__information .Show__episodes {
+  width: 50px;
+  padding: 5px;
+  border-left: 1px solid #c3c3c3;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-size: 12px;
+}
+
 /** Component ShowContainer */
 .Show-container {
   position: relative;

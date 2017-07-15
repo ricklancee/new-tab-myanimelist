@@ -82,7 +82,7 @@ export default class ListContainer extends React.Component<Props, State> {
 
     // Since this is quite a heavy operation we get airing data later
     this.listFetcher.onListUpdated(async (list: ListResponse[]) => {
-        const watchingShows = list.filter(({status}: any) => status === Status.watching)
+        const watchingShows = list.filter(({status}) => status === Status.watching)
         const airingData = await this.listFetcher.getAiringDatesForShows(watchingShows)
 
         // Update the filter to have the new data with airing information
