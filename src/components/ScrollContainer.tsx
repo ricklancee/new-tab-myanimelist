@@ -30,7 +30,7 @@ export default class ScrollContainer extends React.Component<Props, {}> {
       return
     }
 
-    let containerHeight = this.containerElement.offsetHeight + this.containerElement.offsetTop
+    const containerHeight = this.containerElement.offsetHeight + this.containerElement.offsetTop
     const distance = containerHeight - (window.scrollY + window.innerHeight)
 
     if (distance <= window.innerHeight) {

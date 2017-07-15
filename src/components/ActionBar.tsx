@@ -31,7 +31,9 @@ export default class ActionBar extends React.Component<Props, State> {
   filter({status}: {status: Status|'all'}) {
     // console.log(status)
     this.setState({filteredByStatus: status})
-    this.props.onFilter(status)
+
+    // Improve percieved performance
+    requestAnimationFrame(() => this.props.onFilter(status))
   }
 
   render() {

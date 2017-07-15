@@ -14,10 +14,11 @@ interface Props {
   onLogin: (user: {username: string, password: string}) => void
 }
 
-const bestGirls = [
+const bestPass = [
   'Bot-chan is best girl',
-  'Your waifu is shit',
+  'Your waifu is trash',
   'Yui is best girl',
+  'no waifu, no laifu',
   'Megumin is best girl',
   'Misaka is best girl',
   'Koko is best girl',
@@ -68,7 +69,7 @@ export default class Login extends React.Component<Props, State> {
     }
 
     this.usernamePlaceholder = sample(weaboos) as string
-    this.passwordPlaceholder = sample(bestGirls) as string
+    this.passwordPlaceholder = sample(bestPass) as string
 
     this.api = new MALjs()
 

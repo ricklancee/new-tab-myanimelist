@@ -14,7 +14,7 @@
 .ActionBar__status-filter,
 .ActionBar__season-filter {
   border: 0;
-  background: transparent;
+  background-color: transparent;
   padding: .25em 0.75em;
   color: #000;
   font-size: 1em;

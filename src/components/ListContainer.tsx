@@ -10,7 +10,33 @@ import ActionBar from './ActionBar'
 import ScrollContainer from './ScrollContainer'
 
 interface State {
-  shows: ListResponse[]
+  shows: {
+    finishedAt: Date,
+    id: number,
+    lastUpdated: Date,
+    rewatching: boolean,
+    rewatchingEpisode: number,
+    score: number,
+    startedAt: Date,
+    status: number,
+    tags: [string],
+    watchedEpisodes: number,
+    series: {
+      id: number
+      title: string
+      endedAt: Date
+      startedAt: Date
+      episodes: number
+      image: string
+      status: 1|2|3|4|6
+      synonyms: [string]
+      type: string
+    },
+    airing?: {
+      airingDate: Date,
+      nextEpisode: number
+    }
+  }[]
 }
 
 interface Props {
@@ -25,8 +51,6 @@ const sortByStartedAt = (showA: ListResponse, showB: ListResponse) => {
 }
 
 export default class ListContainer extends React.Component<Props, State> {
-  private api: MALjs
-
   private list: ListResponse[] = []
 
   private skip: number = 0
@@ -40,19 +64,65 @@ export default class ListContainer extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
-    this.api = (new MALjs()).setCredentials(props.user.username, props.user.password)
+    const malApi = (new MALjs()).setCredentials(props.user.username, props.user.password)
 
     this.state = {
       shows: []
     }
 
     this.filter = new Filter()
-    this.listFetcher = new ListFetcher(this.api)
+    this.listFetcher = new ListFetcher(malApi)
 
     this.setListData = this.setListData.bind(this)
 
-    this.listFetcher.getListForUser(props.user.username).then(this.setListData)
+    this.listFetcher.getCachedListDataForUser(props.user.username)
+      .then(this.setListData)
+
     this.listFetcher.onListUpdated(this.setListData)
+
+    // Since this is quite a heavy operation we get airing data later
+    this.listFetcher.onListUpdated(async (list: ListResponse[]) => {
+        const watchingShows = list.filter(({status}: any) => status === Status.watching)
+        const airingData = await this.listFetcher.getAiringDatesForShows(watchingShows)
+
+        // Update the filter to have the new data with airing information
+        this.filter.setData((list: ListResponse[]) => {
+          return list.map(show => {
+            const match = airingData.find(({id}) => id === show.series.id)
+
+            if (!match) {
+              return show
+            }
+
+            return {
+              ...show,
+              airing: {
+                airingDate: match.airingDate,
+                nextEpisode: match.nextEpisode
+              }
+            }
+          })
+        })
+
+        // Set the state for any shows that were are already in state
+        this.setState({
+          shows: this.state.shows.slice().map(show => {
+            const match = airingData.find(({id}) => id === show.series.id)
+
+            if (!match) {
+              return show
+            }
+
+            return {
+              ...show,
+              airing: {
+                airingDate: match.airingDate,
+                nextEpisode: match.nextEpisode
+              }
+            }
+          })
+        })
+    })
 
     this.onLoadMore = this.onLoadMore.bind(this)
     this.onFilter = this.onFilter.bind(this)
@@ -136,6 +206,10 @@ export default class ListContainer extends React.Component<Props, State> {
                   totalEpisodeCount={show.series.episodes}
                   status={show.status}
                   id={show.series.id}
+                  airing={show.airing ? {
+                    nextEpisode: show.airing.nextEpisode,
+                    airDate: show.airing.airingDate
+                  } : undefined}
                 />
               </li>
           })}

@@ -1,6 +1,6 @@
 export default class Store {
 
-  get(key: string): Promise<object> {
+  get(key: string): Promise<object[]|object> {
     return new Promise((resolve) => {
       // if (chrome && chrome.storage) {
       //   chrome.storage.local.get(key, resolve)

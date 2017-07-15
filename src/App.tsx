@@ -2,13 +2,14 @@ import * as React from 'react'
 import './App.css'
 import Login from './components/Login'
 import ListContainer from './components/ListContainer'
+// import SeasonList from './components/SeasonList'
 import Header from './components/Header'
 import { storage } from './support/Store'
 
 interface State {
   user: {
     username: string,
-    password: string,
+    password: string
   } | null
   isLoading: boolean
 }
@@ -65,6 +66,10 @@ class App extends React.Component<{}, State> {
     return (
       <div className="app">
         <Header onLogout={this.onLogout} />
+        {/* {this.state.user && (
+          <SeasonList />
+        )} */}
+
         <ListContainer user={this.state.user} />
       </div>
     )

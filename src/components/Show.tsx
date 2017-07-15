@@ -1,5 +1,6 @@
 import * as React from 'react'
 import './Show.css'
+import * as moment from 'moment'
 
 // 1/watching, 2/completed, 3/onhold, 4/dropped, 6/plantowatch
 export enum Status {
@@ -75,6 +76,7 @@ export default class Show extends React.Component<Props, State> {
 
   shouldComponentUpdate(nextProps: Props, nextState: State) {
     if ( // This performs
+      nextProps.airing !== this.props.airing ||
       nextProps.currentEpisode !== this.props.currentEpisode ||
       nextProps.title !== this.props.title ||
       nextProps.image !== this.props.image ||
@@ -128,8 +130,29 @@ export default class Show extends React.Component<Props, State> {
     console.log('TODO: Implement completing an show')
   }
 
+  formatRelativeAiringDate(dateTime: Date) {
+    const airs = moment(dateTime)
+    const today = moment()
+
+    if (airs.isBetween(today.startOf('day'), today.endOf('day'))) {
+      return 'Airs today ' + airs.from(today)
+    }
+
+    if (airs.diff(today, 'days') === 6) {
+      return 'Aired today'
+    }
+
+    if (airs.diff(today, 'days') > 8) {
+      return 'Airs ' + airs.format('MM-DD-YYYY')
+    }
+
+    const dayOfTheWeek = airs.format('dddd')
+
+    return 'Airs ' + dayOfTheWeek + 's (' + airs.from(today, true) + ' left)'
+  }
+
   render() {
-    const { title, image, id } = this.props
+    const { title, image, id, airing } = this.props
     const { status, totalEpisodeCount, currentEpisode, showCompleteButton } = this.state
 
     return (
@@ -139,6 +162,9 @@ export default class Show extends React.Component<Props, State> {
         <header className="Show__title">
           <h4>{title}</h4>
         </header>
+        {airing && (
+          <div className="Show__airing" data-ref="airing">{`${this.formatRelativeAiringDate(airing.airDate)}`}</div>
+        )}
         <figure className="Show__image-container">
           <a href={`https://myanimelist.net/anime/${id}`} target="_blank" className="Show__link">
             <img src={image} alt={title} />
@@ -159,7 +185,12 @@ export default class Show extends React.Component<Props, State> {
               <span className="episode-count__title">Episodes seen:</span>
               <span className="episode-count__episodes">
                 <span>{currentEpisode}</span>/
-                <span>{totalEpisodeCount ? totalEpisodeCount : '??'}</span>
+                {airing ? (
+                  <span className="next-episode">{airing.nextEpisode}</span>
+                ) : (
+                  <span>{totalEpisodeCount ? totalEpisodeCount : '??'}</span>
+                )}
+
               </span>
             </div>
           </div>

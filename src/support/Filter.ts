@@ -1,13 +1,19 @@
 
-import { get, groupBy, flatten } from 'lodash'
+import { get, groupBy, flatten, isArray } from 'lodash'
 
 export default class Filter {
-  private data: any[]
-  private filtered: any[]
+  private data: any[] = []
+  private filtered: any[] = []
 
-  setData(data: any[]) {
-    this.data = [...data]
-    this.filtered = [...data]
+  setData(data: any[]|Function) {
+    if (isArray(data)) {
+      this.data = [...data]
+      this.filtered = [...data]
+    } else {
+      const newData = data([...this.data])
+      this.data = [...newData]
+      this.filtered = [...newData]
+    }
 
     return this
   }

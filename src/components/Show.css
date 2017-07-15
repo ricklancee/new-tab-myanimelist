@@ -62,7 +62,7 @@
 
 .Show__airing {
   position: absolute;
-  display: none;
+  display: block;
   right: 0;
   top: 250px;
   font-size: 10px;
@@ -71,9 +71,6 @@
   color: #fff;
   text-align: center;
   opacity: 0.95;
-}
-.Show__airing.isShown {
-  display: block;
 }
 
 .Show__controls {
