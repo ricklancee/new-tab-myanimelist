@@ -23,11 +23,18 @@ interface Props {
   currentEpisode: number
   totalEpisodeCount: number
   status: Status
-  id: string|number
+  id: number
   airing?: {
     nextEpisode: number
     airDate: Date
   }
+  onShowUpdated?: (show: ShowUpdatedData) => void
+}
+
+export type ShowUpdatedData = {
+  id: number,
+  episode: number,
+  status: Status
 }
 
 interface State {
@@ -58,11 +65,17 @@ export default class Show extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
+    const completed = (
+      props.status !== Status.completed &&
+      props.currentEpisode === props.totalEpisodeCount &&
+      props.totalEpisodeCount !== 0
+    )
+
     this.state = {
-      status: props.status,
+      status: completed ? Status.completed : props.status,
       totalEpisodeCount: props.totalEpisodeCount,
       currentEpisode: props.currentEpisode,
-      showCompleteButton: false
+      showCompleteButton: completed
     }
 
     this.incrementEpisode = this.incrementEpisode.bind(this)
@@ -74,7 +87,12 @@ export default class Show extends React.Component<Props, State> {
     this.setState({
       status: nextProps.status,
       totalEpisodeCount: nextProps.totalEpisodeCount,
-      currentEpisode: nextProps.currentEpisode
+      currentEpisode: nextProps.currentEpisode,
+      showCompleteButton: (
+        nextProps.status !== Status.completed &&
+        nextProps.currentEpisode === nextProps.totalEpisodeCount &&
+        nextProps.totalEpisodeCount !== 0
+      )
     })
   }
 
@@ -107,14 +125,22 @@ export default class Show extends React.Component<Props, State> {
       return
     }
 
-    const count = this.state.currentEpisode + 1
-    const isFinished = count === this.state.totalEpisodeCount && this.state.totalEpisodeCount !== 0
+    const currentEpisode = this.state.currentEpisode + 1
+    const isFinished = currentEpisode === this.state.totalEpisodeCount && this.state.totalEpisodeCount !== 0
 
     this.setState({
-      currentEpisode: count,
+      currentEpisode: currentEpisode,
       showCompleteButton: this.state.status !== Status.completed && isFinished,
       status: isFinished ? Status.completed : this.state.status,
     })
+
+    if (this.props.onShowUpdated) {
+      this.props.onShowUpdated({
+        id: this.props.id,
+        episode: currentEpisode,
+        status: this.props.status,
+      })
+    }
   }
 
   decrementEpisode() {
@@ -122,11 +148,21 @@ export default class Show extends React.Component<Props, State> {
       return
     }
 
+    const currentEpisode = this.state.currentEpisode - 1
+
     this.setState({
-      currentEpisode: this.state.currentEpisode - 1,
+      currentEpisode: currentEpisode,
       showCompleteButton: false,
       status: this.props.status,
     })
+
+    if (this.props.onShowUpdated) {
+      this.props.onShowUpdated({
+        id: this.props.id,
+        episode: currentEpisode,
+        status: this.props.status,
+      })
+    }
   }
 
   complete() {
@@ -134,7 +170,13 @@ export default class Show extends React.Component<Props, State> {
       return
     }
 
-    console.log('TODO: Implement completing an show')
+    if (this.props.onShowUpdated) {
+      this.props.onShowUpdated({
+        id: this.props.id,
+        episode: this.state.currentEpisode,
+        status: Status.completed
+      })
+    }
   }
 
   formatRelativeAiringDate(dateTime: Date) {

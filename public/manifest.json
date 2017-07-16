@@ -7,7 +7,6 @@
     "newtab": "index.html"
   },
   "permissions": [
-    "https://myanimelist.net/",
-    "storage"
+    "https://myanimelist.net/"
   ]
 }

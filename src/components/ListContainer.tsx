@@ -1,11 +1,13 @@
 import * as React from 'react'
 import './ListContainer.css'
+import { debounce } from 'lodash'
 
-import MALjs, { ListResponse } from '../support/Api'
+import { ListResponse } from '../support/Api'
 import Filter from '../support/Filter'
-import ListFetcher from '../support/ListFetcher'
+import ListFetcher, { AiringData } from '../support/ListFetcher'
+import ListUpdater from '../support/ListUpdater'
 
-import Show, { Status } from './Show'
+import Show, { Status, ShowUpdatedData } from './Show'
 import ActionBar from './ActionBar'
 import ScrollContainer from './ScrollContainer'
 
@@ -50,6 +52,9 @@ const sortByStartedAt = (showA: ListResponse, showB: ListResponse) => {
   return new Date(showB.series.startedAt).getTime() - new Date(showA.series.startedAt).getTime()
 }
 
+/**
+ * ListContainer handels the fetching, updating, rendering and filtering of shows.
+ */
 export default class ListContainer extends React.Component<Props, State> {
   private list: ListResponse[] = []
 
@@ -59,73 +64,87 @@ export default class ListContainer extends React.Component<Props, State> {
 
   private filter: Filter
   private listFetcher: ListFetcher
+  private listUpdater: ListUpdater
   private currentFilterStatus: Status|'all' = Status.watching // Default sort = watching
 
   constructor(props: Props) {
     super(props)
-
-    const malApi = (new MALjs()).setCredentials(props.user.username, props.user.password)
 
     this.state = {
       shows: []
     }
 
     this.filter = new Filter()
-    this.listFetcher = new ListFetcher(malApi)
+    this.listFetcher = new ListFetcher()
+    this.listUpdater = new ListUpdater(props.user)
 
-    this.setListData = this.setListData.bind(this)
+    this.listFetcher.getCachedListDataForUser(props.user)
+        .then(list => this.setListData(list))
 
-    this.listFetcher.getCachedListDataForUser(props.user.username)
-      .then(this.setListData)
+    // Sometimes it happens when you (for example) open up your browser
+    // but are still connecting to the internet; the app will load because files
+    // are stored online but the fetch will fail. Therefor if the navigator is offline
+    // we poll until it's online and only then fetch the list.
+    if (!window.navigator.onLine) {
+      const self = this;
 
-    this.listFetcher.onListUpdated(this.setListData)
+      (function pollUntillOnline() {
+        setTimeout(() => {
+          if (!window.navigator.onLine) {
+            return pollUntillOnline()
+          }
 
-    // Since this is quite a heavy operation we get airing data later
-    this.listFetcher.onListUpdated(async (list: ListResponse[]) => {
-        const watchingShows = list.filter(({status}) => status === Status.watching)
-        const airingData = await this.listFetcher.getAiringDatesForShows(watchingShows)
-
-        // Update the filter to have the new data with airing information
-        this.filter.setData((list: ListResponse[]) => {
-          return list.map(show => {
-            const match = airingData.find(({id}) => id === show.series.id)
-
-            if (!match) {
-              return show
-            }
-
-            return {
-              ...show,
-              airing: {
-                airingDate: match.airingDate,
-                nextEpisode: match.nextEpisode
-              }
-            }
-          })
-        })
-
-        // Set the state for any shows that were are already in state
-        this.setState({
-          shows: this.state.shows.slice().map(show => {
-            const match = airingData.find(({id}) => id === show.series.id)
-
-            if (!match) {
-              return show
-            }
-
-            return {
-              ...show,
-              airing: {
-                airingDate: match.airingDate,
-                nextEpisode: match.nextEpisode
-              }
-            }
-          })
-        })
-    })
+          self.fetchUpdatedDataFromNetwork()
+        }, 250)
+      })()
+    } else {
+        this.fetchUpdatedDataFromNetwork()
+    }
 
     this.onLoadMore = this.onLoadMore.bind(this)
     this.onFilter = this.onFilter.bind(this)
+    this.onShowUpdated = debounce(this.onShowUpdated.bind(this), 225)
+  }
+
+  fetchUpdatedDataFromNetwork() {
+    this.listFetcher.idlelyFetchListForUser(this.props.user)
+      .then((list: ListResponse[]) => {
+        this.setListData(list)
+        this.getAndSetAiringDataForWatchingShows(list)
+      })
+  }
+
+  async getAndSetAiringDataForWatchingShows(list: ListResponse[]) {
+    const watchingShows = list.filter(({status}) => status === Status.watching)
+    const airingData = await this.listFetcher.getAiringDatesForShows(watchingShows)
+
+    // Update the filter to have the new data with airing information
+    this.filter.transformList((originalList: ListResponse[]) => {
+      return this.mergeListWithAiringData(originalList, airingData)
+    })
+
+    // Set the airing data for any shows that are in state
+    this.setState({
+      shows: this.mergeListWithAiringData(this.state.shows.slice(), airingData)
+    })
+  }
+
+  mergeListWithAiringData(list: ListResponse[], airingData: AiringData[]) {
+    return list.map(show => {
+      const match = airingData.find(({id}) => id === show.series.id)
+
+      if (!match) {
+        return show
+      }
+
+      return {
+        ...show,
+        airing: {
+          airingDate: match.airingDate,
+          nextEpisode: match.nextEpisode
+        }
+      }
+    })
   }
 
   setListData(list: ListResponse[]) {
@@ -137,7 +156,7 @@ export default class ListContainer extends React.Component<Props, State> {
       this.filter.filterBy('status', this.currentFilterStatus, sortByStartedAt)
     }
 
-    this.list = this.filter.get()
+    this.list = this.filter.get() as ListResponse[]
 
     this.resetPagination()
 
@@ -176,7 +195,7 @@ export default class ListContainer extends React.Component<Props, State> {
       this.filter.groupBy('status', sortByStartedAt)
     }
 
-    this.list = this.filter.get()
+    this.list = this.filter.get() as ListResponse[]
 
     this.resetPagination()
 
@@ -188,6 +207,39 @@ export default class ListContainer extends React.Component<Props, State> {
   resetPagination() {
     this.skip = 0
     this.max = this.list.length
+  }
+
+  onShowUpdated(show: ShowUpdatedData) {
+    this.filter.transformList((list: ListResponse[]) => {
+      const found = list.find(({series}) => series.id === show.id)
+
+      if (found) {
+        const alreadyCompleted = found.status === Status.completed
+
+        // Since this is a reference we can update the object
+        found.watchedEpisodes = show.episode
+        found.status = show.status
+
+        // If the show goes from a non completed status to completed
+        // remove it from the current view.
+        if (!alreadyCompleted && show.status === Status.completed) {
+          const indexInState = this.state.shows.findIndex(({series}) => series.id === show.id)
+
+          this.listUpdater.completeShow(show.id)
+
+          this.setState({
+            shows: [
+              ...this.state.shows.slice(0, indexInState),
+              ...this.state.shows.slice(indexInState + 1),
+            ]
+          })
+        } else {
+          this.listUpdater.updateEpisodeCount(show.id, show.episode)
+        }
+      }
+
+      return list
+    })
   }
 
   render() {
@@ -210,6 +262,7 @@ export default class ListContainer extends React.Component<Props, State> {
                     nextEpisode: show.airing.nextEpisode,
                     airDate: show.airing.airingDate
                   } : undefined}
+                  onShowUpdated={this.onShowUpdated}
                 />
               </li>
           })}

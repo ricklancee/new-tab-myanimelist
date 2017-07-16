@@ -316,6 +316,7 @@ export default class MALjs {
       })
     }
 
+    // tslint:disable-next-line:no-any
     private post(url: string, data?: any, auth: boolean = true) {
       return new Promise((resolve, reject) => {
         const req = new XMLHttpRequest()

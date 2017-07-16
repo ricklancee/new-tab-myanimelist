@@ -40,7 +40,6 @@ export default class ActionBar extends React.Component<Props, State> {
     return (
       <div className="ActionBar">
         <div className="ActionBar__filter-status">
-          <span>Status:</span>
           <FilterButton
             status={'all'}
             onClick={this.filter}
@@ -85,9 +84,7 @@ export default class ActionBar extends React.Component<Props, State> {
           </FilterButton>
         </div>
         <div className="ActionBar__filter-season">
-          <span>Season:</span>
-          <button className="ActionBar__season-filter">All</button>
-          <button className="ActionBar__season-filter">Current Season</button>
+          <button className="ActionBar__season-filter">This season</button>
         </div>
       </div>
     )

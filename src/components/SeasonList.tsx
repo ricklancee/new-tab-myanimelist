@@ -10,7 +10,7 @@ interface State {
 }
 
 /**
- * Converts the date integer 20170630 from AniList to the dat string 2017-06-30
+ * Converts the date integer 20170630 from AniList to the date string 2017-06-30
  * so we can use it properly.
  *
  * @param integer

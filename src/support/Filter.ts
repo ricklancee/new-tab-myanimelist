@@ -1,19 +1,21 @@
 
-import { get, groupBy, flatten, isArray } from 'lodash'
+import { get, groupBy, flatten } from 'lodash'
 
 export default class Filter {
-  private data: any[] = []
-  private filtered: any[] = []
+  private data: object[] = []
+  private filtered: object[] = []
 
-  setData(data: any[]|Function) {
-    if (isArray(data)) {
-      this.data = [...data]
-      this.filtered = [...data]
-    } else {
-      const newData = data([...this.data])
-      this.data = [...newData]
-      this.filtered = [...newData]
-    }
+  setData(data: object[]) {
+    this.data = [...data]
+    this.filtered = [...data]
+
+    return this
+  }
+
+  transformList(transformFunction: (list: object[]) => object[]) {
+    const newData = transformFunction([...this.data])
+    this.data = [...newData]
+    this.filtered = [...newData]
 
     return this
   }
@@ -23,14 +25,14 @@ export default class Filter {
     return this
   }
 
-  filterBy(key: string, value: any, sortFunc: (a: any, b: any) => number) {
+  filterBy(key: string, value: string|number|boolean|null, sortFunc: (a: object, b: object) => number) {
     this.filtered = this.filtered.filter(item => {
       return get(item, key) === value
     }).sort(sortFunc)
     return this
   }
 
-  groupBy(key: string, sortFunc: (a: any, b: any) => number) {
+  groupBy(key: string, sortFunc: (a: object, b: object) => number) {
     const grouped = groupBy(this.filtered, key)
 
     const flattened = flatten(
