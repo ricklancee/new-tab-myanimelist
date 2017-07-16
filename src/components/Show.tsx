@@ -183,16 +183,16 @@ export default class Show extends React.Component<Props, State> {
     const airs = moment(dateTime)
     const today = moment()
 
-    if (airs.isBetween(today.startOf('day'), today.endOf('day'))) {
+    if (airs.isBetween(moment(today).startOf('day'), moment(today).endOf('day'))) {
       return 'Airs today ' + airs.from(today)
     }
 
-    if (airs.diff(today, 'days') === 6) {
+    if (this.props.airing && this.props.airing.nextEpisode > 1 && airs.diff(today, 'days') === 6) {
       return 'Aired today'
     }
 
-    if (airs.diff(today, 'days') > 8) {
-      return 'Airs ' + airs.format('MM-DD-YYYY')
+    if (airs.diff(today, 'days') > 7) {
+      return 'Airs ' + airs.format('dddd, D MMMM')
     }
 
     const dayOfTheWeek = airs.format('dddd')
