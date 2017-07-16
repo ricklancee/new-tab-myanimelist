@@ -316,7 +316,7 @@ export default class MALjs {
       })
     }
 
-    private post(url: string, data?: {}, auth: boolean = true) {
+    private post(url: string, data?: any, auth: boolean = true) {
       return new Promise((resolve, reject) => {
         const req = new XMLHttpRequest()
 
@@ -345,7 +345,8 @@ export default class MALjs {
         }
 
         if (data) {
-          const xml = this.toXml(data)
+          const object = {entry: data}
+          const xml = this.toXml(object)
           req.send(`data=${xml}`)
         } else {
           req.send()
