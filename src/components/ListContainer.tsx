@@ -48,7 +48,13 @@ interface Props {
   }
 }
 
-const sortByStartedAt = (showA: ListResponse, showB: ListResponse) => {
+const sortByStartedAt = (showA: any, showB: any) => {
+  if (showA.airing && !showB.airing) {
+    return -1
+  } else if (showB.airing && !showA.airing) {
+    return 1
+  }
+
   return new Date(showB.series.startedAt).getTime() - new Date(showA.series.startedAt).getTime()
 }
 
