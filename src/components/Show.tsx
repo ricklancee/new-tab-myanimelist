@@ -215,7 +215,15 @@ export default class Show extends React.Component<Props, State> {
           <div className="Show__airing" data-ref="airing">{`${this.formatRelativeAiringDate(airing.airDate)}`}</div>
         )}
         <figure className="Show__image-container">
-          <a href={`https://myanimelist.net/anime/${id}`} target="_blank" className="Show__link">
+          <a
+            href={
+              !seasonalData
+              ? `https://myanimelist.net/anime/${id}`
+              : `https://myanimelist.net/search/all?q=${encodeURIComponent(this.props.title)}`
+            }
+            target="_blank"
+            className="Show__link"
+          >
             <img src={image} alt={title} />
           </a>
         </figure>

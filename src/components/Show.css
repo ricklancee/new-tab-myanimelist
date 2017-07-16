@@ -195,7 +195,7 @@
 .Show__information > div:first-child {
   min-width: 0;
   flex: 1;
-  padding: 3px 5px;
+  padding: 3px 7px;
 }
 
 .Show__type {

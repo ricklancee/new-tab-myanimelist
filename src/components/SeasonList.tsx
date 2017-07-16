@@ -4,6 +4,7 @@ import AniApi, { Series } from '../support/AniApi'
 import ScrollContainer from './ScrollContainer'
 import Show from './Show'
 import { get, groupBy, flatten, split, uniqBy } from 'lodash'
+import * as moment from 'moment'
 
 interface State {
   shows: Series[]
@@ -50,7 +51,7 @@ export default class SeasonList extends React.Component<{}, State> {
         })
 
         const groupedByType = groupBy(uniqueShows, 'type')
-
+        const today = moment()
         this.seasonalShows = flatten(
           Object.keys(groupedByType)
             .sort(type => type === 'TV' || type === 'TV Short' ? -1 : 1)
@@ -60,11 +61,21 @@ export default class SeasonList extends React.Component<{}, State> {
               const dateB = get(seriesB, 'airing.time')
                 || crappyDateIntegerToDateString(get(seriesB, 'start_date_fuzzy') as number)
 
+              const daysA = moment(dateA).diff(today, 'days')
+              const daysB = moment(dateB).diff(today, 'days')
+
+              const nextEpisodeA = get(seriesA, 'airing.next_episode')
+              const nextEpisodeB = get(seriesB, 'airing.next_episode')
+
+              if (nextEpisodeA > 1 && daysA === 6 && daysB !== 6) {
+                return -1
+              } else if (nextEpisodeB > 1 && daysB === 6 && daysA !== 6) {
+                return 1
+              }
+
               return new Date(dateA as string).getTime() - new Date(dateB as string).getTime()
             }))
         )
-
-        console.log(this.seasonalShows)
 
         this.setState({
           shows: this.seasonalShows.slice(0, this.limit)
