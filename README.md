@@ -2,8 +2,8 @@
 
 This chrome extension replaces your new tab window with your list from myanimelist.net.
 
-![](http://i.imgur.com/9MMsgAc.jpg)
-![](http://i.imgur.com/JcKQRt5.jpg)
+![](https://i.imgur.com/DNrvK40.jpg)
+![](https://i.imgur.com/Z3pIVbM.jpg)
 
 #### Features
 - Display your anime list from myanimelist.net in chrome's new tab

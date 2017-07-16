@@ -66,8 +66,8 @@ class App extends React.Component<{}, State> {
     return (
       <div className="app">
         <Header onLogout={this.onLogout} />
-        {/* <SeasonList /> */}
-        <ListContainer user={this.state.user} />
+         {/* <SeasonList /> */}
+         <ListContainer user={this.state.user} />
       </div>
     )
   }

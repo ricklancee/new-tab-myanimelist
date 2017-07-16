@@ -144,20 +144,19 @@ export default class Login extends React.Component<Props, State> {
             </div>
 
             {hasFailed ? (
-                <p className="error">
-                   { attempts > 4 && (
-                    <strong>
-                      Too many failed login attemps will result in a temporary 2 hour ban from MAL!
-                      <br />
-                    </strong>
-                   )}
-                  Failed to login into Myanimelist.<br />
-                  <small>{this.state.error}</small>
-                </p>
-              ) : (
-                <p>Your username and password are stored locally in the browser as plain text.</p>
-              )
-            }
+              <p className="error">
+                  { attempts > 4 && (
+                  <strong>
+                    Too many failed login attemps will result in a temporary 2 hour ban from MAL!
+                    <br />
+                  </strong>
+                  )}
+                Failed to login into Myanimelist.<br />
+                <small>{this.state.error}</small>
+              </p>
+            ) : (
+              <p>Login with your MyAnimeList username and password to start tracking and updating your list</p>
+            )}
           </form>
         </div>
       </div>
