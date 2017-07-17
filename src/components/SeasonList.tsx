@@ -22,19 +22,30 @@ const crappyDateIntegerToDateString = (integer: number): string => {
 
 export default class SeasonList extends React.Component<{}, State> {
 
+  static cachedList: Series [] = []
+
   private seasonalShows: Series[] = []
 
   private skip: number = 0
   private limit: number = 35
 
+
   constructor(props: {}) {
     super(props)
 
-    const api = new AniApi
-
     this.state = {
-      shows: []
+      shows: SeasonList.cachedList
     }
+
+    if (SeasonList.cachedList.length === 0) {
+      this.fetchListFromNetwork()
+    }
+
+    this.onLoadMore = this.onLoadMore.bind(this)
+  }
+
+  fetchListFromNetwork() {
+    const api = new AniApi
 
     // We explicitly check if the access token needs to be refreshed
     // if not each request will check it in the Promise.all
@@ -77,13 +88,13 @@ export default class SeasonList extends React.Component<{}, State> {
             }))
         )
 
+        SeasonList.cachedList = this.seasonalShows
+
         this.setState({
           shows: this.seasonalShows.slice(0, this.limit)
         })
       })
     })
-
-    this.onLoadMore = this.onLoadMore.bind(this)
   }
 
   getCurrentSeason() {
