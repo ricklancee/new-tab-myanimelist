@@ -20,7 +20,7 @@ I personally am too lazy to go to myanimelist.net and update anime on my list. T
 
 ### Install the extension (unpacked)
 
-Clone or download this repository. Go to chrome://extensions/ and enable developer mode. Click "Load unpacked extension..." and select the repository folder you just downloaded. Open a new tab and login to your mal account.
+[Download](https://github.com/ricklancee/new-tab-myanimelist/archive/master.zip) and unpack the zip files. Go to chrome://extensions/ and enable developer mode. Click "Load unpacked extension..." and select the folder you just downloaded/unpacked. Open a new tab and login to your mal account.
 
 ### Build Source files
 
