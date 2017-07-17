@@ -18,9 +18,9 @@ This chrome extension replaces your new tab window with your list from myanimeli
 ### Motivation
 I personally am too lazy to go to myanimelist.net and update anime on my list. This is one step faster. Also it quickly shows me what shows i am watching and when the next episode airs
 
-### Install the extension (unpacked)
+### Manually install the extension (unpacked)
 
-[Download](https://github.com/ricklancee/new-tab-myanimelist/archive/master.zip) and unpack the zip files. Go to [chrome://extensions/](chrome://extensions/) and enable developer mode. Click "Load unpacked extension..." and select the folder you just downloaded/unpacked. Open a new tab and login to your mal account.
+[Download](https://github.com/ricklancee/new-tab-myanimelist/archive/master.zip) and unpack the zip files. Go to the chrome extension settings by typing in chrome://extensions/ in your address bar. Check the checkbox 'enable developer mode' and click "Load unpacked extension..." and select the `build/` folder inside the folder you just downloaded and unpacked. Open a new tab and login to your mal account.
 
 ### Build Source files
 
