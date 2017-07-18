@@ -3,3 +3,7 @@ body {
   padding: 1.5em;
   font-family: sans-serif;
 }
+
+#root {
+  width: 100%;
+}
