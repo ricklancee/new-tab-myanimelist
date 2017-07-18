@@ -29,6 +29,10 @@
   border-bottom-color: #c3c3c3;
 }
 
+.Show--status-is-watching.Show--full-border {
+  border-color: #18A939;
+}
+
 .Show__title {
   position: absolute;
   left: 0;

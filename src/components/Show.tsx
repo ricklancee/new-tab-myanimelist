@@ -179,6 +179,17 @@ export default class Show extends React.Component<Props, State> {
     }
   }
 
+  airedToday() {
+    if (!this.props.airing) {
+      return
+    }
+
+    const airs = moment(this.props.airing.airDate)
+    const today = moment()
+
+    return this.props.airing && this.props.airing.nextEpisode > 1 && airs.diff(today, 'days') === 6
+  }
+
   formatRelativeAiringDate(dateTime: Date) {
     const airs = moment(dateTime)
     const today = moment()
@@ -187,7 +198,7 @@ export default class Show extends React.Component<Props, State> {
       return 'Airs today ' + airs.from(today)
     }
 
-    if (this.props.airing && this.props.airing.nextEpisode > 1 && airs.diff(today, 'days') === 6) {
+    if (this.airedToday()) {
       return 'Aired today'
     }
 
@@ -204,9 +215,16 @@ export default class Show extends React.Component<Props, State> {
     const { title, image, id, airing, seasonalData } = this.props
     const { status, totalEpisodeCount, currentEpisode, showCompleteButton } = this.state
 
+    const fullBorder = airing && currentEpisode !== airing.nextEpisode - 1 && this.airedToday()
+
     return (
       <article
-        className={`Show Show--show-title-on-hover Show--status-is-${toReadableStatus(status)}`}
+        className={`
+          Show
+          Show--show-title-on-hover
+          ${fullBorder ? 'Show--full-border' : ''}
+          Show--status-is-${toReadableStatus(status)}
+          `}
       >
         <header className="Show__title">
           <h4>{title}</h4>
