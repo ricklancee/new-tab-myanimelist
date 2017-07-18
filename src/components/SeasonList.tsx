@@ -3,7 +3,7 @@ import './SeasonList.css'
 import AniApi, { Series } from '../support/AniApi'
 import ScrollContainer from './ScrollContainer'
 import Show from './Show'
-import { get, groupBy, flatten, split, uniqBy } from 'lodash'
+import { get, split, uniqBy } from 'lodash'
 import * as moment from 'moment'
 
 interface State {
@@ -29,12 +29,13 @@ export default class SeasonList extends React.Component<{}, State> {
   private skip: number = 0
   private limit: number = 35
 
-
   constructor(props: {}) {
     super(props)
 
+    this.seasonalShows = SeasonList.cachedList
+
     this.state = {
-      shows: SeasonList.cachedList
+      shows: this.seasonalShows.slice(this.skip, this.limit)
     }
 
     if (SeasonList.cachedList.length === 0) {
@@ -61,32 +62,30 @@ export default class SeasonList extends React.Component<{}, State> {
           return new Date(crappyDateIntegerToDateString(start_date_fuzzy as number)).getFullYear() > 2016
         })
 
-        const groupedByType = groupBy(uniqueShows, 'type')
         const today = moment()
-        this.seasonalShows = flatten(
-          Object.keys(groupedByType)
-            .sort(type => type === 'TV' || type === 'TV Short' ? -1 : 1)
-            .map(item => groupedByType[item].sort((seriesA, seriesB) => {
-              const dateA = get(seriesA, 'airing.time')
-                || crappyDateIntegerToDateString(get(seriesA, 'start_date_fuzzy') as number)
-              const dateB = get(seriesB, 'airing.time')
-                || crappyDateIntegerToDateString(get(seriesB, 'start_date_fuzzy') as number)
+        this.seasonalShows = uniqueShows
+          .sort((seriesA, seriesB) => {
+            const dateA = get(seriesA, 'airing.time')
+            const dateB = get(seriesB, 'airing.time')
 
-              const daysA = moment(dateA).diff(today, 'days')
-              const daysB = moment(dateB).diff(today, 'days')
+            if (!dateA || !dateB) {
+              return 1
+            }
 
-              const nextEpisodeA = get(seriesA, 'airing.next_episode')
-              const nextEpisodeB = get(seriesB, 'airing.next_episode')
+            const daysA = moment(dateA).diff(today, 'days')
+            const daysB = moment(dateB).diff(today, 'days')
 
-              if (nextEpisodeA > 1 && daysA === 6 && daysB !== 6) {
-                return -1
-              } else if (nextEpisodeB > 1 && daysB === 6 && daysA !== 6) {
-                return 1
-              }
+            const nextEpisodeA = get(seriesA, 'airing.next_episode')
+            const nextEpisodeB = get(seriesB, 'airing.next_episode')
 
-              return new Date(dateA as string).getTime() - new Date(dateB as string).getTime()
-            }))
-        )
+            if (nextEpisodeA > 1 && daysA === 6 && daysB !== 6) {
+              return -1
+            } else if (nextEpisodeB > 1 && daysB === 6 && daysA !== 6) {
+              return 1
+            }
+
+            return new Date(dateA as string).getTime() - new Date(dateB as string).getTime()
+          })
 
         SeasonList.cachedList = this.seasonalShows
 
