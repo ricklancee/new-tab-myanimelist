@@ -48,6 +48,7 @@ interface Props {
   }
 }
 
+// tslint:disable-next-line:no-any
 const sortByStartedAt = (showA: any, showB: any) => {
   if (showA.airing && !showB.airing) {
     return -1
@@ -87,11 +88,13 @@ export default class ListContainer extends React.Component<Props, State> {
     this.listFetcher.getCachedListDataForUser(props.user)
         .then(list => this.setListData(list))
 
-    // Sometimes it happens when you (for example) open up your browser
-    // but are still connecting to the internet; the app will load because files
-    // are stored online but the fetch will fail. Therefor if the navigator is offline
-    // we poll until it's online and only then fetch the list.
-    if (!window.navigator.onLine) {
+    if (window.navigator.onLine) {
+      this.fetchUpdatedDataFromNetwork()
+    } else {
+      // Sometimes it happens when you (for example) open up your browser
+      // but are still connecting to the internet; the app will load because files
+      // are stored online but the fetch will fail. Therefor if the navigator is offline
+      // we poll until it's online and only then fetch the list.
       const self = this;
 
       (function pollUntillOnline() {
@@ -100,16 +103,27 @@ export default class ListContainer extends React.Component<Props, State> {
             return pollUntillOnline()
           }
 
+          self.reloadImageInDom()
           self.fetchUpdatedDataFromNetwork()
         }, 250)
       })()
-    } else {
-        this.fetchUpdatedDataFromNetwork()
     }
 
     this.onLoadMore = this.onLoadMore.bind(this)
     this.onFilter = this.onFilter.bind(this)
     this.onShowUpdated = debounce(this.onShowUpdated.bind(this), 225)
+  }
+
+  reloadImageInDom() {
+    const images = this.state.shows.map(({series}) => series.image)
+    if (images.length > 0) {
+      images.forEach((url: string) => {
+        const imageInDom = document.querySelector(`img[src="${url}"]`) as HTMLImageElement
+        if (imageInDom) {
+          imageInDom.src = url
+        }
+      })
+    }
   }
 
   fetchUpdatedDataFromNetwork() {
