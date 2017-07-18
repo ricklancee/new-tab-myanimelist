@@ -4,15 +4,16 @@
   font-size: 12px;
 }
 
-.ActionBar__filter-status,
-.ActionBar__filter-season {
+.ActionBar__filter-status {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
 }
 
-.ActionBar__status-filter:first-child,
-.ActionBar__season-filter:first-child {
+.ActionBar__status-filter {
+    margin-left: 0.5em;
+}
+.ActionBar__status-filter:first-child {
   margin-left: 0;
 }
 
