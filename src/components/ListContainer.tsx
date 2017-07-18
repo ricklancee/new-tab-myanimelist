@@ -11,34 +11,36 @@ import Show, { Status, ShowUpdatedData } from './Show'
 import ActionBar from './ActionBar'
 import ScrollContainer from './ScrollContainer'
 
+type ListItem = {
+  finishedAt: Date,
+  id: number,
+  lastUpdated: Date,
+  rewatching: boolean,
+  rewatchingEpisode: number,
+  score: number,
+  startedAt: Date,
+  status: number,
+  tags: [string],
+  watchedEpisodes: number,
+  series: {
+    id: number
+    title: string
+    endedAt: Date
+    startedAt: Date
+    episodes: number
+    image: string
+    status: 1|2|3|4|6
+    synonyms: [string]
+    type: string
+  },
+  airing?: {
+    airingDate: Date,
+    nextEpisode: number
+  }
+}
+
 interface State {
-  shows: {
-    finishedAt: Date,
-    id: number,
-    lastUpdated: Date,
-    rewatching: boolean,
-    rewatchingEpisode: number,
-    score: number,
-    startedAt: Date,
-    status: number,
-    tags: [string],
-    watchedEpisodes: number,
-    series: {
-      id: number
-      title: string
-      endedAt: Date
-      startedAt: Date
-      episodes: number
-      image: string
-      status: 1|2|3|4|6
-      synonyms: [string]
-      type: string
-    },
-    airing?: {
-      airingDate: Date,
-      nextEpisode: number
-    }
-  }[]
+  shows: ListItem[]
 }
 
 interface Props {
@@ -48,8 +50,7 @@ interface Props {
   }
 }
 
-// tslint:disable-next-line:no-any
-const sortByStartedAt = (showA: any, showB: any) => {
+const sortByStartedAt = (showA: ListItem, showB: ListItem) => {
   if (showA.airing && !showB.airing) {
     return -1
   } else if (showB.airing && !showA.airing) {
@@ -128,18 +129,18 @@ export default class ListContainer extends React.Component<Props, State> {
 
   fetchUpdatedDataFromNetwork() {
     this.listFetcher.idlelyFetchListForUser(this.props.user)
-      .then((list: ListResponse[]) => {
+      .then((list: ListItem[]) => {
         this.setListData(list)
         this.getAndSetAiringDataForWatchingShows(list)
       })
   }
 
-  async getAndSetAiringDataForWatchingShows(list: ListResponse[]) {
+  async getAndSetAiringDataForWatchingShows(list: ListItem[]) {
     const watchingShows = list.filter(({status}) => status === Status.watching)
     const airingData = await this.listFetcher.getAiringDatesForShows(watchingShows)
 
     // Update the filter to have the new data with airing information
-    this.filter.transformList((originalList: ListResponse[]) => {
+    this.filter.transformList((originalList: ListItem[]) => {
       return this.mergeListWithAiringData(originalList, airingData)
     })
 
@@ -149,7 +150,7 @@ export default class ListContainer extends React.Component<Props, State> {
     })
   }
 
-  mergeListWithAiringData(list: ListResponse[], airingData: AiringData[]) {
+  mergeListWithAiringData(list: ListItem[], airingData: AiringData[]) {
     return list.map(show => {
       const match = airingData.find(({id}) => id === show.series.id)
 
@@ -167,7 +168,7 @@ export default class ListContainer extends React.Component<Props, State> {
     })
   }
 
-  setListData(list: ListResponse[]) {
+  setListData(list: ListItem[]) {
     this.filter.setData(list)
 
     if (this.currentFilterStatus === 'all') {
@@ -176,7 +177,7 @@ export default class ListContainer extends React.Component<Props, State> {
       this.filter.filterBy('status', this.currentFilterStatus, sortByStartedAt)
     }
 
-    this.list = this.filter.get() as ListResponse[]
+    this.list = this.filter.get() as ListItem[]
 
     this.resetPagination()
 
@@ -185,7 +186,7 @@ export default class ListContainer extends React.Component<Props, State> {
     })
   }
 
-  getListChunkFromList(list: ListResponse[]): ListResponse[] {
+  getListChunkFromList(list: ListItem[]): ListItem[] {
     return list.slice(this.skip, this.skip + this.limit)
   }
 
@@ -215,7 +216,7 @@ export default class ListContainer extends React.Component<Props, State> {
       this.filter.groupBy('status', sortByStartedAt)
     }
 
-    this.list = this.filter.get() as ListResponse[]
+    this.list = this.filter.get() as ListItem[]
 
     this.resetPagination()
 
@@ -230,7 +231,7 @@ export default class ListContainer extends React.Component<Props, State> {
   }
 
   onShowUpdated(show: ShowUpdatedData) {
-    this.filter.transformList((list: ListResponse[]) => {
+    this.filter.transformList((list: ListItem[]) => {
       const found = list.find(({series}) => series.id === show.id)
 
       if (found) {
