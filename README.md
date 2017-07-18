@@ -4,18 +4,15 @@ This chrome extension replaces your new tab window with your list from myanimeli
 
 ![New Tab MyAnimeList - MyAnimeList screen](https://i.imgur.com/JYn9OPl.jpg)
 
-Update and see airing dates (countdown) for watching shows for MAL  
-Shows amount of currently aired, unwatched episodes in green  
-Set's start date to today when episode goes from 0 > 1  
+Update shows to you MAL and see airing dates (countdown)
 
 ![New Tab MyAnimeList - Complete shows](http://i.imgur.com/hMOUomi.jpg)
 
-Complete shows that are finished  
-set's finished date on MAL when it's completed  
+Complete shows that are finished 
 
 ![New Tab MyAnimeList - Seasonal shows screen](https://i.imgur.com/RdSNU7T.jpg)
 
-All currently airing shows this anime season
+See all airing shows this season
 
 ![New Tab MyAnimeList - Login screen](https://i.imgur.com/OqkOZrG.jpg)
 
@@ -29,15 +26,22 @@ All currently airing shows this anime season
 - Add settings for customization (backgrounds, colors Etc)
 - Table view. 
 
-### Motivation
-I am way too lazy to go to myanimelist.net and update anime on my list. This is one step faster. Also it quickly shows me what shows i am watching and when the next episode airs
-
 ### Manually install the extension (unpacked)
 
-[Download](https://github.com/ricklancee/new-tab-myanimelist/archive/master.zip) and unpack the zip files. Go to the chrome extension settings by typing in chrome://extensions/ in your address bar. Check the checkbox 'enable developer mode' and click "Load unpacked extension..." and select the `build/` folder inside the folder you just downloaded and unpacked. Open a new tab and login to your mal account.
+1. [Download](https://github.com/ricklancee/new-tab-myanimelist/archive/master.zip) and unpack the zip files somewhere save.
+2. Go to the chrome extension settings by typing in chrome://extensions/ in your address bar.
+3. Check the checkbox 'enable developer mode' and click "Load unpacked extension..."
+4. Select the `build/` folder inside the unpacked zip.
+5. Open a new tab and login to your mal account.
+
+### Motivation
+I am way too lazy to go to myanimelist.net and update anime on my list. This is one step faster. Also it quickly shows me what shows i am watching and when the next episode airs
 
 ### Build Source files
 
 1. Install dependencies with `npm install`
 2. Build the app files with `npm run build`
 
+**Development**  
+
+Install dependencies and run `npm run start`. The app is served to http://localhost:3000. You propabably want to disable web security temporarily because request to MAL won't work in localhost because of CORS. For mac: `open -a Google\ Chrome --args --disable-web-security --user-data-dir`. 
