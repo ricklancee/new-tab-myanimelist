@@ -83,9 +83,6 @@ export default class ActionBar extends React.Component<Props, State> {
             Plan to watch
           </FilterButton>
         </div>
-        <div className="ActionBar__filter-season">
-          <button className="ActionBar__season-filter">This season</button>
-        </div>
       </div>
     )
   }

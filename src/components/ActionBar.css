@@ -11,27 +11,9 @@
   align-items: center;
 }
 
-.ActionBar__status-filter,
-.ActionBar__season-filter {
-  border: 0;
-  background-color: transparent;
-  padding: .25em 0.75em;
-  color: #000;
-  font-size: 1em;
-  margin-left: 0.5em;
-  cursor: pointer;
-  outline: 0;
-  border-bottom: 2px solid #000;
-}
 .ActionBar__status-filter:first-child,
 .ActionBar__season-filter:first-child {
   margin-left: 0;
-}
-
-.ActionBar__status-filter--active,
-.ActionBar__season-filter--active {
-  background-color: #000;
-  color: #fff;
 }
 
 .ActionBar__status-filter--watching.ActionBar__status-filter--active {

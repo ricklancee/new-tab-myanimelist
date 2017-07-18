@@ -2,7 +2,7 @@ import * as React from 'react'
 import './App.css'
 import Login from './components/Login'
 import ListContainer from './components/ListContainer'
-// import SeasonList from './components/SeasonList'
+import SeasonList from './components/SeasonList'
 import Header from './components/Header'
 import { storage } from './support/Store'
 
@@ -12,6 +12,7 @@ interface State {
     password: string
   } | null
   isLoading: boolean
+  showSeasonalList: boolean
 }
 
 class App extends React.Component<{}, State> {
@@ -21,7 +22,8 @@ class App extends React.Component<{}, State> {
 
     this.state = {
       user: null,
-      isLoading: true
+      isLoading: true,
+      showSeasonalList: false
     }
 
     this.getCurrentUser().then(user => {
@@ -33,6 +35,7 @@ class App extends React.Component<{}, State> {
 
     this.onLogout = this.onLogout.bind(this)
     this.onLogin  = this.onLogin.bind(this)
+    this.toggleSeasonalList = this.toggleSeasonalList.bind(this)
   }
 
   getCurrentUser() {
@@ -52,6 +55,12 @@ class App extends React.Component<{}, State> {
     this.setState({user: null})
   }
 
+  toggleSeasonalList() {
+    this.setState({
+      showSeasonalList: !this.state.showSeasonalList
+    })
+  }
+
   render() {
     if (this.state.isLoading) {
       return <div />
@@ -65,9 +74,13 @@ class App extends React.Component<{}, State> {
 
     return (
       <div className="app">
-        <Header onLogout={this.onLogout} />
-         {/* <SeasonList /> */}
-         <ListContainer user={this.state.user} />
+        <Header onLogout={this.onLogout} onListToggle={this.toggleSeasonalList}/>
+
+        {this.state.showSeasonalList ? (
+          <SeasonList />
+        ) : (
+          <ListContainer user={this.state.user}/>
+        )}
       </div>
     )
   }

@@ -5,6 +5,8 @@
   max-width: 61.625rem;
   width: 100%;
   margin-top: 1em;
+  margin-left: auto;
+  margin-right: auto;
   padding-left: 1em;
   padding-right: 1em;
   font-size: 14px;
@@ -23,9 +25,20 @@
   text-decoration: none;
 }
 
+.Header__list-toggle {
+  background: #efefef;
+  padding: 0.25em 0.5em;
+  font-size: 12px;
+  text-decoration: none;
+  margin-left: 18px;
+  border: 0;
+}
+
 .brandmark {
+  display: flex;
   text-decoration: none;
 }
+
 .brandmark h1 {
   line-height: 1;
   font-size: 22px;
