@@ -187,7 +187,10 @@ export default class Show extends React.Component<Props, State> {
     const airs = moment(this.props.airing.airDate)
     const today = moment()
 
-    return this.props.airing && this.props.airing.nextEpisode > 1 && airs.diff(today, 'days') === 6
+    return this.props.airing
+      && this.props.airing.nextEpisode > 1
+      && airs.diff(today, 'days') === 6
+      && moment(today).startOf('day').isSameOrBefore(airs)
   }
 
   formatRelativeAiringDate(dateTime: Date) {
