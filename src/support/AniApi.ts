@@ -39,8 +39,8 @@ type Type = 'TV'|'TV Short'|'Movie'|'Special'|'OVA'|'ONA'|'Music'|'Manga'|'Novel
 type Season = 'winter'|'spring'|'summer'|'fall'
 
 export default class AniApi {
-  private clientId: string = 'aardappeltaart-cmqds'
-  private clientSecret: string = 'X9X9Hok53RIFmFT0iuXHa9GlE08eq'
+  private clientId: string = process.env.REACT_APP_ANI_LIST_CLIENT_ID as string
+  private clientSecret: string = process.env.REACT_APP_ANI_LIST_CLIENT_SECRET as string
 
   private base: string = 'https://anilist.co/api/'
   private token: BearerToken
