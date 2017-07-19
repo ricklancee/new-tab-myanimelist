@@ -11,6 +11,7 @@
     "@types/react": "^15.0.35",
     "@types/react-dom": "^15.5.1",
     "electron": "^1.6.11",
+    "electron-builder": "^19.16.0",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "react": "^15.6.1",
