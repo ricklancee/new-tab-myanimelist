@@ -219,6 +219,7 @@ export default class Show extends React.Component<Props, State> {
     const { status, totalEpisodeCount, currentEpisode, showCompleteButton } = this.state
 
     const fullBorder = airing && currentEpisode !== airing.nextEpisode - 1 && this.airedToday()
+    const airingDateString = airing && moment(airing.airDate).format('MM-DD-YYYY HH:mm')
 
     return (
       <article
@@ -233,7 +234,13 @@ export default class Show extends React.Component<Props, State> {
           <h4>{title}</h4>
         </header>
         {airing && (
-          <div className="Show__airing" data-ref="airing">{`${this.formatRelativeAiringDate(airing.airDate)}`}</div>
+          <time
+            className="Show__airing"
+            dateTime={airingDateString}
+            title={airingDateString}
+          >
+            {`${this.formatRelativeAiringDate(airing.airDate)}`}
+          </time>
         )}
         <figure className="Show__image-container">
           <a

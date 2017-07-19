@@ -123,7 +123,9 @@ export default class MALjs {
     private parser: DOMParser
 
     constructor() {
-      this.base = 'https://myanimelist.net'
+      this.base = process.env.REACT_APP_CORS_EVERYWHERE
+        ? 'https://cors-anywhere.herokuapp.com/https://myanimelist.net'
+        : 'https://myanimelist.net'
 
       this.parser = new DOMParser()
 
