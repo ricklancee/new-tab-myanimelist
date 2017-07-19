@@ -1,6 +1,6 @@
 # MyAnimeList in a new tab for chrome
 
-This chrome extension replaces your new tab window with your list from myanimelist.net.
+This chrome extension replaces your new tab window with your list from myanimelist.net. [Demo](https://ricklancee.github.io/new-tab-myanimelist/)
 
 ![New Tab MyAnimeList - MyAnimeList screen](https://i.imgur.com/JYn9OPl.jpg)
 
