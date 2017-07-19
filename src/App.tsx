@@ -6,11 +6,13 @@ import SeasonList from './components/SeasonList'
 import Header from './components/Header'
 import { storage } from './support/Store'
 
+export type User = {
+  username: string,
+  password: string
+}
+
 interface State {
-  user: {
-    username: string,
-    password: string
-  } | null
+  user: User | null
   isLoading: boolean
   showSeasonalList: boolean
 }
@@ -45,7 +47,7 @@ class App extends React.Component<{}, State> {
     }|null>
   }
 
-  onLogin(user: {username: string, password: string}) {
+  onLogin(user: User) {
     storage.set('app.user', user)
     this.setState({user})
   }

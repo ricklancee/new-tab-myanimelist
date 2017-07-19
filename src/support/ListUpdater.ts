@@ -1,11 +1,7 @@
 import { storage } from './Store'
 import MALjs from './Api'
 import * as moment from 'moment'
-
-type User = {
-  username: string
-  password: string
-}
+import { User } from '../App'
 
 type RequestData = {
   date_start?: string

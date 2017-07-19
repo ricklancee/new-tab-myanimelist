@@ -1,16 +1,12 @@
 import { storage } from './Store'
 import MALjs, { ListResponse } from './Api'
 import AniApi from './AniApi'
+import { User } from '../App'
 
 export type AiringData = {
   id?: number
   airingDate: Date
   nextEpisode: number
-}
-
-type User = {
-  username: string
-  password: string
 }
 
 export default class ListFetcher  {

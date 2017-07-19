@@ -2,6 +2,7 @@ import * as React from 'react'
 import './Login.css'
 import MALjs from '../support/Api'
 import { sample, isPlainObject } from 'lodash'
+import { User } from '../App'
 
 interface State {
   isLoading: Boolean
@@ -11,7 +12,7 @@ interface State {
 }
 
 interface Props {
-  onLogin: (user: {username: string, password: string}) => void
+  onLogin: (user: User) => void
 }
 
 const bestPass = [

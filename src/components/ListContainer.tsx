@@ -6,7 +6,7 @@ import { ListResponse } from '../support/Api'
 import Filter from '../support/Filter'
 import ListFetcher, { AiringData } from '../support/ListFetcher'
 import ListUpdater from '../support/ListUpdater'
-
+import { User } from '../App'
 import Show, { Status, ShowUpdatedData } from './Show'
 import ActionBar from './ActionBar'
 import ScrollContainer from './ScrollContainer'
@@ -44,10 +44,7 @@ interface State {
 }
 
 interface Props {
-  user: {
-    password: string
-    username: string
-  }
+  user: User
 }
 
 const sortByStartedAt = (showA: ListItem, showB: ListItem) => {
