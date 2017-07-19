@@ -40,8 +40,14 @@ I am way too lazy to go to myanimelist.net and update anime on my list. This is 
 ### Build Source files
 
 1. Install dependencies with `npm install`
+3. Create a `.env` file in the project root fill it with [AniList client credentials](https://anilist-api.readthedocs.io/en/latest/introduction.html#creating-a-client) (see below)
 2. Build the app files with `npm run build`
 
+```sh
+# .env
+REACT_APP_ANI_LIST_CLIENT_ID=your-ani-list-client-id
+REACT_APP_ANI_LIST_CLIENT_SECRET=your-ani-list-client-secret
+```
 **Development**  
 
 Install dependencies and run `npm run start`. The app is served to http://localhost:3000. You propabably want to disable web security temporarily because request to MAL won't work in localhost because of CORS. For mac: `open -a Google\ Chrome --args --disable-web-security --user-data-dir`. 
