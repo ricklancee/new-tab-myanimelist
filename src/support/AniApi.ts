@@ -113,8 +113,12 @@ export default class AniApi {
     const response = await window.fetch(this.base + authEndpoint + '?' + queryParams, { method: 'POST' })
     const bearerToken = await response.json()
 
-    if (bearerToken.errors) {
-      throw new Error('Failed to get ClientCredentialsToken')
+    if (bearerToken.error) {
+      if (bearerToken.error_description) {
+        throw new Error('AniList Api: ' + bearerToken.error_description)
+      }
+
+      throw new Error('AniList Api: Failed to get client credentials')
     }
 
     this.token = bearerToken as BearerToken
