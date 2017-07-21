@@ -111,6 +111,7 @@ export default class ListContainer extends React.Component<Props, State> {
 
     this.onLoadMore = this.onLoadMore.bind(this)
     this.onFilter = this.onFilter.bind(this)
+    this.onSearch = debounce(this.onSearch.bind(this), 150)
     this.onShowUpdated = debounce(this.onShowUpdated.bind(this), 225)
   }
 
@@ -236,6 +237,21 @@ export default class ListContainer extends React.Component<Props, State> {
     })
   }
 
+  onSearch(query: string) {
+    this.filter.reset()
+
+    this.filter.filterBy('status', this.currentFilterStatus, sortByStartedAt)
+    this.filter.filterByFuzzy(['series.title', 'series.synonyms'], query)
+
+    this.list = this.filter.get() as ListItem[]
+
+    this.resetPagination()
+
+    this.setState({
+      shows: this.getListChunkFromList(this.list)
+    })
+  }
+
   resetPagination() {
     this.skip = 0
     this.max = this.list.length
@@ -279,7 +295,7 @@ export default class ListContainer extends React.Component<Props, State> {
 
     return (
       <div className="ListContainer">
-        <ActionBar onFilter={this.onFilter} />
+        <ActionBar onFilter={this.onFilter}  onSearch={this.onSearch} />
         <ScrollContainer onLoadMore={this.onLoadMore}>
           {shows.map(show => {
             return <li key={show.series.id}>

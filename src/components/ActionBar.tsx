@@ -4,6 +4,7 @@ import { Status, toReadableStatus } from './Show'
 
 interface Props {
   onFilter: (status: Status|'all') => void
+  onSearch: (query: string) => void
 }
 
 interface State {
@@ -26,6 +27,7 @@ export default class ActionBar extends React.Component<Props, State> {
     }
 
     this.filter = this.filter.bind(this)
+    this.search = this.search.bind(this)
   }
 
   filter({status}: {status: Status|'all'}) {
@@ -34,6 +36,12 @@ export default class ActionBar extends React.Component<Props, State> {
 
     // Improve percieved performance
     requestAnimationFrame(() => this.props.onFilter(status))
+  }
+
+  search(event: any) {
+    const value = event.target.value
+
+    this.props.onSearch(value)
   }
 
   render() {
@@ -82,6 +90,11 @@ export default class ActionBar extends React.Component<Props, State> {
           >
             Plan to watch
           </FilterButton>
+        </div>
+        <div className="ActionBar__search">
+          <div className="ActionBar__search-container">
+            <input type="text" placeholder="search" onChange={this.search} />
+          </div>
         </div>
       </div>
     )

@@ -1,5 +1,7 @@
-
 import { get, groupBy, flatten } from 'lodash'
+import * as Fuse from 'fuse.js'
+
+type SortFunc = (a: object, b: object) => number
 
 export default class Filter {
   private data: object[] = []
@@ -25,14 +27,37 @@ export default class Filter {
     return this
   }
 
-  filterBy(key: string, value: string|number|boolean|null, sortFunc: (a: object, b: object) => number) {
-    this.filtered = this.filtered.filter(item => {
-      return get(item, key) === value
-    }).sort(sortFunc)
+  filterByFuzzy(keys: string[], query: string) {
+    if (query.length === 0) {
+      return this
+    }
+
+    const fuse = new Fuse(this.filtered, {
+      shouldSort: true,
+      threshold: 0.6,
+      location: 0,
+      distance: 10,
+      maxPatternLength: 32,
+      minMatchCharLength: 1,
+      keys: [
+        ...keys
+      ]
+    })
+
+    this.filtered = fuse.search(query)
+
     return this
   }
 
-  groupBy(key: string, sortFunc: (a: object, b: object) => number) {
+  filterBy(key: string, value: string|number|boolean|null, sortFunc: SortFunc) {
+    this.filtered = this.filtered.filter(item => {
+      return get(item, key) === value
+    }).sort(sortFunc)
+
+    return this
+  }
+
+  groupBy(key: string, sortFunc: SortFunc) {
     const grouped = groupBy(this.filtered, key)
 
     const flattened = flatten(
