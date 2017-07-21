@@ -10,10 +10,12 @@
   transform: translateY(calc(100% + 1em));
   transition: transform 225ms 100ms cubic-bezier(0.0, 0.0, 0.2, 1);
   will-change: transform;
+  opacity: 0;
 }
 
 .Toast--show {
   transform: translateY(0);
+  opacity: 1;
 }
 
 .Toast--error {
