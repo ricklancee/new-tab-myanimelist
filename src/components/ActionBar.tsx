@@ -38,6 +38,7 @@ export default class ActionBar extends React.Component<Props, State> {
     requestAnimationFrame(() => this.props.onFilter(status))
   }
 
+  // tslint:disable-next-line:no-any
   search(event: any) {
     const value = event.target.value
 
