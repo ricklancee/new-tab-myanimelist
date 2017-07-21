@@ -70,7 +70,9 @@ export default class ListContainer extends React.Component<Props, State> {
   private filter: Filter
   private listFetcher: ListFetcher
   private listUpdater: ListUpdater
+
   private currentFilterStatus: Status|'all' = Status.watching // Default sort = watching
+  private currentFilterSearchQuery: string = ''
 
   private canCompleteFetch: boolean = true
 
@@ -222,11 +224,9 @@ export default class ListContainer extends React.Component<Props, State> {
     this.filter.reset()
     this.currentFilterStatus = status
 
-    if (status !== 'all') {
-      this.filter.filterBy('status', status, sortByStartedAt)
-    } else {
-      this.filter.groupBy('status', sortByStartedAt)
-    }
+    this.filterByStatus(status)
+
+    this.filter.filterByFuzzy(['series.title', 'series.synonyms'], this.currentFilterSearchQuery)
 
     this.list = this.filter.get() as ListItem[]
 
@@ -237,11 +237,22 @@ export default class ListContainer extends React.Component<Props, State> {
     })
   }
 
+  filterByStatus(status: Status|'all') {
+    if (status !== 'all') {
+      this.filter.filterBy('status', status, sortByStartedAt)
+    } else {
+      this.filter.groupBy('status', sortByStartedAt)
+    }
+  }
+
   onSearch(query: string) {
     this.filter.reset()
 
-    this.filter.filterBy('status', this.currentFilterStatus, sortByStartedAt)
-    this.filter.filterByFuzzy(['series.title', 'series.synonyms'], query)
+    this.currentFilterSearchQuery = query
+
+    this.filterByStatus(this.currentFilterStatus)
+
+    this.filter.filterByFuzzy(['series.title', 'series.synonyms'], this.currentFilterSearchQuery)
 
     this.list = this.filter.get() as ListItem[]
 
