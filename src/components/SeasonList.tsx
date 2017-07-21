@@ -2,6 +2,7 @@ import * as React from 'react'
 import './SeasonList.css'
 import AniApi, { Series } from '../support/AniApi'
 import ScrollContainer from './ScrollContainer'
+import Loading from './Loading'
 import Show from './Show'
 import { get, split, uniqBy } from 'lodash'
 import * as moment from 'moment'
@@ -9,6 +10,7 @@ import toast from '../support/toast'
 
 interface State {
   shows: Series[]
+  isLoading: boolean
 }
 
 /**
@@ -30,13 +32,17 @@ export default class SeasonList extends React.Component<{}, State> {
   private skip: number = 0
   private limit: number = 35
 
+  private canCompleteFetch: boolean = true
+
   constructor(props: {}) {
     super(props)
 
     this.seasonalShows = SeasonList.cachedList
+    const shouldFetchList = this.seasonalShows.length === 0
 
     this.state = {
-      shows: this.seasonalShows.slice(this.skip, this.limit)
+      shows: this.seasonalShows.slice(this.skip, this.limit),
+      isLoading: shouldFetchList
     }
 
     if (SeasonList.cachedList.length === 0) {
@@ -90,13 +96,24 @@ export default class SeasonList extends React.Component<{}, State> {
 
         SeasonList.cachedList = this.seasonalShows
 
-        this.setState({
-          shows: this.seasonalShows.slice(0, this.limit)
-        })
+        if (this.canCompleteFetch) {
+          this.setState({
+            shows: this.seasonalShows.slice(0, this.limit),
+            isLoading: false
+          })
+        }
       })
     }).catch(err => {
       toast.error(err.message)
     })
+  }
+
+  componentDidMount() {
+    this.canCompleteFetch = true
+  }
+
+  componentWillUnmount() {
+    this.canCompleteFetch = false
   }
 
   getCurrentSeason() {
@@ -139,10 +156,12 @@ export default class SeasonList extends React.Component<{}, State> {
   }
 
   render() {
-    const { shows } = this.state
+    const { shows, isLoading } = this.state
 
     return (
       <div className="SeasonList">
+        {isLoading && <Loading noDelay={true} label="Getting season data from AniList..." />}
+
         <ScrollContainer onLoadMore={this.onLoadMore}>
           {shows.map(show => {
             return <li key={show.id}>

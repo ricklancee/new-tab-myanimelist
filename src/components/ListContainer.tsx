@@ -72,6 +72,8 @@ export default class ListContainer extends React.Component<Props, State> {
   private listUpdater: ListUpdater
   private currentFilterStatus: Status|'all' = Status.watching // Default sort = watching
 
+  private canCompleteFetch: boolean = true
+
   constructor(props: Props) {
     super(props)
 
@@ -112,6 +114,14 @@ export default class ListContainer extends React.Component<Props, State> {
     this.onShowUpdated = debounce(this.onShowUpdated.bind(this), 225)
   }
 
+  componentDidMount() {
+    this.canCompleteFetch = true
+  }
+
+  componentWillUnmount() {
+    this.canCompleteFetch = false
+  }
+
   reloadImageInDom() {
     const images = this.state.shows.map(({series}) => series.image)
     if (images.length > 0) {
@@ -141,10 +151,12 @@ export default class ListContainer extends React.Component<Props, State> {
       return this.mergeListWithAiringData(originalList, airingData)
     })
 
-    // Set the airing data for any shows that are in state
-    this.setState({
-      shows: this.mergeListWithAiringData(this.state.shows.slice(), airingData)
-    })
+    if (this.canCompleteFetch) {
+      // Set the airing data for any shows that are in state
+      this.setState({
+        shows: this.mergeListWithAiringData(this.state.shows.slice(), airingData)
+      })
+    }
   }
 
   mergeListWithAiringData(list: ListItem[], airingData: AiringData[]) {
@@ -178,9 +190,11 @@ export default class ListContainer extends React.Component<Props, State> {
 
     this.resetPagination()
 
-    this.setState({
-      shows: this.getListChunkFromList(this.list)
-    })
+    if (this.canCompleteFetch) {
+      this.setState({
+        shows: this.getListChunkFromList(this.list)
+      })
+    }
   }
 
   getListChunkFromList(list: ListItem[]): ListItem[] {
