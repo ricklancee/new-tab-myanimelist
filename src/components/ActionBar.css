@@ -67,22 +67,15 @@
   border-bottom-color: #c3c3c3;
 }
 
-.ActionBar__search {}
-
 .ActionBar__search-container {
+
+}
+
+.ActionBar__search input {
   position: relative;
   width: 150px;
   overflow: hidden;
   padding: 0.25em 1em;
   border: 1px solid #c3c3c3;
-}
-
-input {
-  display: block;
-  width: 100%;
   font-size: 12px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  outline: 0;
 }
