@@ -2,6 +2,7 @@ import { storage } from './Store'
 import MALjs, { ListResponse } from './Api'
 import AniApi from './AniApi'
 import { User } from '../App'
+import toast from './toast'
 
 export type AiringData = {
   id?: number
@@ -74,6 +75,11 @@ export default class ListFetcher  {
    */
   public async getAiringDatesForShows(shows: ListResponse[]): Promise<AiringData[]> {
     const airing = await this.fetchAiring()
+
+    if (!airing) {
+      return []
+    }
+
     return new Promise(resolve => {
         const results = airing.reduce((responseArray, airingShow) => {
           if (!airingShow.airing || !airingShow.airing.time || !airingShow.airing.next_episode) {
@@ -119,8 +125,14 @@ export default class ListFetcher  {
   /**
    * Fetch all airing data from AniList
    */
-  private async fetchAiring() {
-    return await this.aniApi.getCurrentlyAiring()
+  private async fetchAiring()  {
+    try {
+      return await this.aniApi.getCurrentlyAiring()
+    } catch (e) {
+        toast.error(e.message)
+    }
+
+    return null
   }
 
   /**

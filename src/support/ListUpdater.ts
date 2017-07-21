@@ -57,7 +57,10 @@ export default class ListUpdater {
     ]
 
     storage.set(`app.${this.user.username}.list`, updatedList)
-    await this.api.update('anime', id, requestData)
+
+    if (!process.env.REACT_APP_DEMO_MODE) {
+      await this.api.update('anime', id, requestData)
+    }
   }
 
   public async completeShow(id: number) {
@@ -94,6 +97,9 @@ export default class ListUpdater {
     ]
 
     storage.set(`app.${this.user.username}.list`, updatedList)
-    await this.api.update('anime', id, requestData)
+
+    if (!process.env.REACT_APP_DEMO_MODE) {
+      await this.api.update('anime', id, requestData)
+    }
   }
 }

@@ -1,0 +1,32 @@
+.Toast {
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
+  min-width: 225px;
+  padding: 0.75em 1em;
+  background-color: #000;
+  color: #fff;
+  font-size: 14px;
+  transform: translateY(calc(100% + 1em));
+  transition: transform 225ms 100ms cubic-bezier(0.0, 0.0, 0.2, 1);
+  will-change: transform;
+}
+
+.Toast--show {
+  transform: translateY(0);
+}
+
+.Toast--error {
+  background-color: #f30d37;
+  color: #fff;
+}
+
+.Toast--success {
+  background-color: #00c561;
+  color: #fff;
+}
+
+.Toast--info {
+  background-color: #26448f;
+  color: #fff;
+}

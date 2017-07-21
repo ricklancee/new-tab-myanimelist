@@ -5,6 +5,7 @@ import ListContainer from './components/ListContainer'
 import SeasonList from './components/SeasonList'
 import Header from './components/Header'
 import { storage } from './support/Store'
+import Toast from './components/Toast'
 
 export type User = {
   username: string,
@@ -29,6 +30,17 @@ class App extends React.Component<{}, State> {
     }
 
     this.getCurrentUser().then(user => {
+      if (process.env.REACT_APP_DEMO_MODE) {
+        this.setState({
+          user: {
+            username: 'aardappeltaart',
+            password: ''
+          },
+          isLoading: false
+        })
+        return
+      }
+
       this.setState({
         user: user,
         isLoading: false
@@ -83,6 +95,8 @@ class App extends React.Component<{}, State> {
         ) : (
           <ListContainer user={this.state.user}/>
         )}
+
+        <Toast />
       </div>
     )
   }

@@ -5,6 +5,7 @@ import ScrollContainer from './ScrollContainer'
 import Show from './Show'
 import { get, split, uniqBy } from 'lodash'
 import * as moment from 'moment'
+import toast from '../support/toast'
 
 interface State {
   shows: Series[]
@@ -93,6 +94,8 @@ export default class SeasonList extends React.Component<{}, State> {
           shows: this.seasonalShows.slice(0, this.limit)
         })
       })
+    }).catch(err => {
+      toast.error(err.message)
     })
   }
 

@@ -123,9 +123,7 @@ export default class MALjs {
     private parser: DOMParser
 
     constructor() {
-      this.base = process.env.REACT_APP_CORS_EVERYWHERE
-        ? 'https://cors-anywhere.herokuapp.com/https://myanimelist.net'
-        : 'https://myanimelist.net'
+      this.base = 'https://myanimelist.net'
 
       this.parser = new DOMParser()
 
@@ -286,15 +284,15 @@ export default class MALjs {
       return xmlString
     }
 
+    private prependCorsAnywhere(url: string): string {
+      return 'https://cors-anywhere.herokuapp.com/' + url
+    }
+
     private get(url: string, auth: boolean = true) {
       return new Promise((resolve, reject) => {
         const req = new XMLHttpRequest()
 
-        if (auth) {
-          req.open('GET', url, true, this.username, this.password)
-        } else {
-          req.open('GET', url)
-        }
+        this.openRequest(req, 'GET', url, auth)
 
         req.onload = () => {
           const data = req.response
@@ -323,11 +321,7 @@ export default class MALjs {
       return new Promise((resolve, reject) => {
         const req = new XMLHttpRequest()
 
-        if (auth) {
-          req.open('POST', url, true, this.username, this.password)
-        } else {
-          req.open('POST', url)
-        }
+        this.openRequest(req, 'POST', url, auth)
 
         req.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
 
@@ -355,5 +349,27 @@ export default class MALjs {
           req.send()
         }
       })
+    }
+
+    private openRequest(req: XMLHttpRequest, method: string, url: string, auth: boolean) {
+      if (auth) {
+        const URLObject = new URL(url)
+
+        let authUrl =  URLObject.protocol + '//'
+          + this.username + ':' + this.password + '@'
+          + URLObject.href.replace(URLObject.protocol + '//', '')
+
+        if (process.env.REACT_APP_DEMO_MODE) {
+          authUrl = this.prependCorsAnywhere(authUrl)
+        }
+
+        req.open(method, authUrl, true)
+      } else {
+        if (process.env.REACT_APP_DEMO_MODE) {
+          url = this.prependCorsAnywhere(url)
+        }
+
+        req.open(method, url)
+      }
     }
   }
