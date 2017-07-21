@@ -17,6 +17,16 @@
   margin-left: 0;
 }
 
+.ActionBar__status-filter {
+  background-color: transparent;
+  color: #000;
+}
+
+.ActionBar__status-filter--active {
+  background-color: #000;
+  color: #fff;
+}
+
 .ActionBar__status-filter--watching.ActionBar__status-filter--active {
   background-color: #18A939;
   color: #fff;
