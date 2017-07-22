@@ -40,7 +40,7 @@ export default class Loading extends React.Component<Props, State> {
 
       this.animationInterval = window.setInterval(_ => {
         emojis.forEach(emoji => emoji.classList.toggle('Loading--flip'))
-      }, 800)
+      }, 600)
     }
   }
 
