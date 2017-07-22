@@ -160,33 +160,35 @@ export default class SeasonList extends React.Component<{}, State> {
 
     return (
       <div className="SeasonList">
-        {isLoading && <Loading noDelay={true} label="Getting season data from AniList..." />}
-
-        <ScrollContainer onLoadMore={this.onLoadMore}>
-          {shows.map(show => {
-            return <li key={show.id}>
-                <Show
-                  seasonalData={{
-                    genres: show.genres,
-                    type: show.type
-                  }}
-                  title={show.title_romaji}
-                  image={show.image_url_lge}
-                  currentEpisode={0}
-                  totalEpisodeCount={show.total_episodes}
-                  status={
-                    // If a show already has one episode make the status 'watching/green'
-                    show.airing && show.airing.next_episode > 1 ? 1 : 6
-                  }
-                  id={show.id}
-                  airing={show.airing ? {
-                    nextEpisode: show.airing.next_episode,
-                    airDate: new Date(show.airing.time)
-                  } : undefined}
-                />
-              </li>
-          })}
-        </ScrollContainer>
+        {isLoading ? (
+          <Loading noDelay={true} label="Getting season data from AniList..." />
+        ) : (
+          <ScrollContainer onLoadMore={this.onLoadMore}>
+            {shows.map(show => {
+              return <li key={show.id}>
+                  <Show
+                    seasonalData={{
+                      genres: show.genres,
+                      type: show.type
+                    }}
+                    title={show.title_romaji}
+                    image={show.image_url_lge}
+                    currentEpisode={0}
+                    totalEpisodeCount={show.total_episodes}
+                    status={
+                      // If a show already has one episode make the status 'watching/green'
+                      show.airing && show.airing.next_episode > 1 ? 1 : 6
+                    }
+                    id={show.id}
+                    airing={show.airing ? {
+                      nextEpisode: show.airing.next_episode,
+                      airDate: new Date(show.airing.time)
+                    } : undefined}
+                  />
+                </li>
+            })}
+          </ScrollContainer>
+        )}
       </div>
     )
   }
