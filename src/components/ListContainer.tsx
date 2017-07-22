@@ -10,6 +10,7 @@ import { User } from '../App'
 import Show, { Status, ShowUpdatedData } from './Show'
 import ActionBar from './ActionBar'
 import ScrollContainer from './ScrollContainer'
+import Loading from './Loading'
 
 type ListItem = {
   finishedAt: Date,
@@ -41,6 +42,7 @@ type ListItem = {
 
 interface State {
   shows: ListItem[]
+  isLoading: boolean
 }
 
 interface Props {
@@ -80,7 +82,8 @@ export default class ListContainer extends React.Component<Props, State> {
     super(props)
 
     this.state = {
-      shows: []
+      shows: [],
+      isLoading: false
     }
 
     this.filter = new Filter()
@@ -88,7 +91,18 @@ export default class ListContainer extends React.Component<Props, State> {
     this.listUpdater = new ListUpdater(props.user)
 
     this.listFetcher.getCachedListDataForUser(props.user)
-        .then(list => this.setListData(list))
+        .then(list => {
+          // If we don't have a cached list start a loading spinner.
+          if (list.length === 0) {
+            this.setState({
+              isLoading: true
+            })
+
+            return
+          }
+
+          this.setListData(list)
+        })
 
     if (window.navigator.onLine) {
       this.fetchUpdatedDataFromNetwork()
@@ -142,6 +156,12 @@ export default class ListContainer extends React.Component<Props, State> {
       .then((list: ListItem[]) => {
         this.setListData(list)
         this.getAndSetAiringDataForWatchingShows(list)
+
+        if (this.state.isLoading) {
+          this.setState({
+            isLoading: false,
+          })
+        }
       })
   }
 
@@ -302,30 +322,35 @@ export default class ListContainer extends React.Component<Props, State> {
   }
 
   render() {
-    const { shows } = this.state
+    const { shows, isLoading } = this.state
 
     return (
       <div className="ListContainer">
         <ActionBar onFilter={this.onFilter}  onSearch={this.onSearch} />
-        <ScrollContainer onLoadMore={this.onLoadMore}>
-          {shows.map(show => {
-            return <li key={show.series.id}>
-                <Show
-                  title={show.series.title}
-                  image={show.series.image}
-                  currentEpisode={show.watchedEpisodes}
-                  totalEpisodeCount={show.series.episodes}
-                  status={show.status}
-                  id={show.series.id}
-                  airing={show.airing ? {
-                    nextEpisode: show.airing.nextEpisode,
-                    airDate: show.airing.airingDate
-                  } : undefined}
-                  onShowUpdated={this.onShowUpdated}
-                />
-              </li>
-          })}
-        </ScrollContainer>
+
+        {isLoading ? (
+          <Loading label="Getting your list from MAL..."/>
+        ) : (
+          <ScrollContainer onLoadMore={this.onLoadMore}>
+            {shows.map(show => {
+              return <li key={show.series.id}>
+                  <Show
+                    title={show.series.title}
+                    image={show.series.image}
+                    currentEpisode={show.watchedEpisodes}
+                    totalEpisodeCount={show.series.episodes}
+                    status={show.status}
+                    id={show.series.id}
+                    airing={show.airing ? {
+                      nextEpisode: show.airing.nextEpisode,
+                      airDate: show.airing.airingDate
+                    } : undefined}
+                    onShowUpdated={this.onShowUpdated}
+                  />
+                </li>
+            })}
+          </ScrollContainer>
+        )}
       </div>
     )
   }
