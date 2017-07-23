@@ -33,14 +33,14 @@ export default class ListUpdater {
     const requestData = {} as RequestData
 
     // If the show has no startedAt, isn't beign rewatched and we started watching from
-    // episode 0 to episode one we can assume we started watching the
+    // episode 0 to episode ogreater than ne we can assume we started watching the
     // show today.
     if (
       show.status === 1 &&
       !show.startedAt &&
       !show.rewatching &&
       show.watchedEpisodes === 0 &&
-      episode === 1
+      episode >= 1
     ) {
       const date = moment().format('MMDDYYYY')
       show.startedAt = date
