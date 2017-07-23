@@ -110,7 +110,7 @@ const conversionTable = {
 
 export default class MALjs {
     public anime: {
-      search: (query: string) => Promise<AnimeResponse>
+      search: (query: string) => Promise<AnimeResponse|{}>
       list: () => Promise<ListResponse[]>
       add: (id: string|number, data: AnimeValues) => Promise<string>
       update: (id: string|number, data: AnimeValues) => Promise<string>
@@ -144,8 +144,16 @@ export default class MALjs {
       return this
     }
 
-    search(type: ResourceType, query: string): Promise<AnimeResponse> {
-      return this.get(`${this.base}/api/${type}/search.xml?q=${encodeURIComponent(query)}`) as Promise<AnimeResponse>
+    async search(type: ResourceType, query: string): Promise<AnimeResponse|{}> {
+      const result = await this.get(`${this.base}/api/${type}/search.xml?q=${encodeURIComponent(query)}`) as {
+        anime: AnimeResponse
+      }
+
+      if (!result || !result.anime) {
+        return {}
+      }
+
+      return result.anime
     }
 
     async list(type: ResourceType): Promise<ListResponse[]> {

@@ -20,6 +20,10 @@ export default class ListFetcher  {
     this.aniApi = new AniApi
   }
 
+  public async searchMal(query: string) {
+    return await this.malApi.anime.search(query)
+  }
+
   /**
    * Get's the cached list data for the user. If there is airing data also cached
    * merge the airing data with the matching shows.

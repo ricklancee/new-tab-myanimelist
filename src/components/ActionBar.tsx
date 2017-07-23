@@ -4,11 +4,12 @@ import { Status, toReadableStatus } from './Show'
 
 interface Props {
   onFilter: (status: Status|'all') => void
-  onSearch: (query: string) => void
+  onSearch: (query: string, searchOnMal: boolean) => void
 }
 
 interface State {
   filteredByStatus: Status|'all',
+  isMalSearchActive: boolean
 }
 
 interface ButtonProps {
@@ -23,11 +24,13 @@ export default class ActionBar extends React.Component<Props, State> {
     super(props)
 
     this.state = {
-      filteredByStatus: Status.watching // default filter
+      filteredByStatus: Status.watching, // default filter
+      isMalSearchActive: false
     }
 
     this.filter = this.filter.bind(this)
     this.search = this.search.bind(this)
+    this.toggleMalSearch = this.toggleMalSearch.bind(this)
   }
 
   filter({status}: {status: Status|'all'}) {
@@ -41,7 +44,13 @@ export default class ActionBar extends React.Component<Props, State> {
   search(event: any) {
     const value = event.target.value
 
-    this.props.onSearch(value)
+    this.props.onSearch(value, this.state.isMalSearchActive)
+  }
+
+  toggleMalSearch() {
+    this.setState({
+      isMalSearchActive: !this.state.isMalSearchActive
+    })
   }
 
   render() {
@@ -93,7 +102,18 @@ export default class ActionBar extends React.Component<Props, State> {
         </div>
         <div className="ActionBar__search">
           <div className="ActionBar__search-container">
-            <input type="text" placeholder="search" onChange={this.search} />
+            <input
+              type="text"
+              placeholder={this.state.isMalSearchActive ? 'search on MAL' : 'search my list'}
+              onChange={this.search}
+            />
+            <button
+              className={`
+                search-container__mal-search
+                ${this.state.isMalSearchActive ? 'search-container__mal-search--active' : ''}
+              `}
+              onClick={this.toggleMalSearch}
+            />
           </div>
         </div>
       </div>

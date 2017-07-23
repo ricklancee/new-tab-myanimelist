@@ -265,16 +265,21 @@ export default class ListContainer extends React.Component<Props, State> {
     }
   }
 
-  onSearch(query: string) {
+  async onSearch(query: string, searchOnMal: boolean = false) {
     this.filter.reset()
 
     this.currentFilterSearchQuery = query
 
-    this.filterByStatus(this.currentFilterStatus)
-
-    this.filter.filterByFuzzy(['series.title', 'series.synonyms'], this.currentFilterSearchQuery)
-
-    this.list = this.filter.get() as ListItem[]
+    if (!searchOnMal) {
+      this.filterByStatus(this.currentFilterStatus)
+      this.filter.filterByFuzzy(['series.title', 'series.synonyms'], this.currentFilterSearchQuery)
+      this.list = this.filter.get() as ListItem[]
+    } else {
+      console.log(
+        'search', query,
+        // await this.listFetcher.searchMal(query)
+      )
+    }
 
     this.resetPagination()
 
