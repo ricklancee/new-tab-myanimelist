@@ -1,7 +1,13 @@
 {
   "manifest_version": 2,
-  "name": "New tab: MyAnimeList",
+  "name": "New tab: MyAnimeList❤",
   "description": "Show your anime list in chrome's new tab window",
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "64": "icon-64.png",
+    "128": "icon-128.png"
+  },
   "version": "1.0",
   "chrome_url_overrides" : {
     "newtab": "index.html"
