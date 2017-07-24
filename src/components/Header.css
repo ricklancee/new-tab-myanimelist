@@ -32,6 +32,9 @@
   margin-left: 18px;
   border: 0;
 }
+.Header__list-toggle:hover {
+  background: #dadada;
+}
 
 .brandmark {
   display: flex;
