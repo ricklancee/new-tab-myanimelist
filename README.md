@@ -18,13 +18,18 @@ See all airing shows this season
 
 #### Features
 - Display your anime list from myanimelist.net in a chrome new tab
-- Ability to change watched episodes and complete shows
-- Sets the finished date when you complete a show
-- Sets the start date when you start watching a show
+- Show currently airing shows from this season 
+- Change watched episodes and complete shows when finished watching
+  - Sets the finished date when you complete a show
+  - Sets the start date when you start watching a show
 
 #### Planned Features
-- Add settings for customization (backgrounds, colors Etc)
-- Table view. 
+- add
+- Add settings for customization
+  - backgrounds
+  - colors
+  - link direction
+  - etc
 
 ### Manually install the extension (unpacked)
 
