@@ -24,7 +24,6 @@ See all airing shows this season
   - Sets the start date when you start watching a show
 
 #### Planned Features
-- add
 - Add settings for customization
   - backgrounds
   - colors
