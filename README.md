@@ -32,11 +32,11 @@ See all airing shows this season
 
 ### Manually install the extension (unpacked)
 
-1. [Download](https://github.com/ricklancee/new-tab-myanimelist/archive/master.zip) and unpack the zip files somewhere save.
-2. Go to the chrome extension settings by typing in chrome://extensions/ in your address bar.
+1. [Download](https://github.com/ricklancee/new-tab-myanimelist/archive/download.zip) and unpack the zip files somewhere save.
+2. Go to the chrome extension settings page: chrome menu > more tools > extensions (or by typing in chrome://extensions/ in your address bar).
 3. Check the checkbox 'enable developer mode' and click "Load unpacked extension..."
-4. Select the `build/` folder inside the unpacked zip.
-5. Open a new tab and login to your mal account.
+4. Select the folder you unzipped in step 1. (enable the extension if you haven't already)
+5. Open a new tab and login to your MAL account.
 
 ### Motivation
 I am way too lazy to go to myanimelist.net and update anime on my list. This is one step faster. Also it quickly shows me what shows i am watching and when the next episode airs
