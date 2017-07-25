@@ -1,6 +1,8 @@
 # MyAnimeList in a new tab for chrome
 
-This chrome extension replaces your new tab window with your list from myanimelist.net. [Demo](https://ricklancee.github.io/new-tab-myanimelist/)
+New Tab: MyAnimeList is a Chrome extension that acts as a startpage and allows you to track and update your shows from MyAnimeList.net quickly and easily in a new tab window.
+
+[Landingpage](https://ricklancee.github.io/new-tab-myanimelist) | [Demo](https://ricklancee.github.io/new-tab-myanimelist/demo)
 
 ![New Tab MyAnimeList - MyAnimeList screen](https://i.imgur.com/JYn9OPl.jpg)
 
