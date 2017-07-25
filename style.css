@@ -95,6 +95,20 @@ header p {
   margin: 0;
 }
 
+.demo-link {
+  display: inline-block;
+  background-color: #efefef;
+  padding: 0.25em 0.5em;
+  font-size: 12px;
+  text-decoration: none;
+  margin-left: 5px;
+  vertical-align: top;
+}
+
+.demo-link:hover {
+  background-color: #cccccc;
+}
+
 .webstore-link {
   margin-top: 1.5rem;
 }
@@ -107,6 +121,9 @@ header p {
   margin-top: 0.75rem;
   color: #009AFF;
   font-size: 12px;
+}
+.manual-link:hover {
+  color: #009AFF;
 }
 
 figure {
