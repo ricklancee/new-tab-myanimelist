@@ -69,6 +69,17 @@
       <p><small>The application is free of use and in not affiliated with MyAnimeList.net or AniList.co</small></p>
       <p class="author">Made with ❤ by <a href="https://github.com/ricklancee">launchee</a></p>
     </footer>
-    <script>if(console && console.log) {console.log('(╯°□°）╯︵ ┻━┻')}</script>
+    <script>
+      if(console && console.log) {console.log('(╯°□°）╯︵ ┻━┻')}
+      document.querySelectorAll('a').forEach(function(link){ link.addEventListener('click', handleOutboundLinkClicks)})
+      function handleOutboundLinkClicks(event) {
+        ga('send', 'event', {
+          eventCategory: 'Outbound Link',
+          eventAction: 'click',
+          eventLabel: event.target.href,
+          transport: 'beacon'
+        });
+      }
+    </script>
   </body>
 </html>
