@@ -34,7 +34,7 @@ export default class Header extends React.Component<Props, State> {
     return (
         <header className="Header">
           <div className="brandmark">
-            <h1>New tab: MyAnimeList<span className="heart">❤</span></h1>
+            <h1>{process.env.REACT_APP_TITLE}<span className="heart">❤</span></h1>
             <button
               className="Header__list-toggle"
               onClick={this.toggleList}

@@ -20,9 +20,14 @@
     "react-scripts-ts": "2.3.2"
   },
   "scripts": {
-    "start": "react-scripts-ts start",
+    "start": "concurrently --kill-others \"node cors.js\" \"REACT_APP_PROXY='http://localhost:8000/' react-scripts-ts start\"",
     "build": "react-scripts-ts build",
+    "build-web": "REACT_APP_PROXY='http://localhost:8000/' REACT_APP_TITLE='Weekly.moe' react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject"
+  },
+  "devDependencies": {
+    "concurrently": "^3.5.0",
+    "cors-anywhere": "^0.4.0"
   }
 }

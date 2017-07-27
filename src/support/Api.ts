@@ -284,10 +284,6 @@ export default class MALjs {
       return xmlString
     }
 
-    private prependCorsAnywhere(url: string): string {
-      return 'https://cors-anywhere.herokuapp.com/' + url
-    }
-
     private get(url: string, auth: boolean = true) {
       return new Promise((resolve, reject) => {
         const req = new XMLHttpRequest()
@@ -359,14 +355,15 @@ export default class MALjs {
           + this.username + ':' + this.password + '@'
           + URLObject.href.replace(URLObject.protocol + '//', '')
 
-        if (process.env.REACT_APP_DEMO_MODE) {
-          authUrl = this.prependCorsAnywhere(authUrl)
+        if (process.env.REACT_APP_PROXY) {
+          authUrl = process.env.REACT_APP_PROXY + authUrl
         }
 
-        req.open(method, authUrl, true)
+        req.open(method, authUrl)
+        req.setRequestHeader('Authorization', 'Basic ' + btoa(this.username + ':' + this.password))
       } else {
-        if (process.env.REACT_APP_DEMO_MODE) {
-          url = this.prependCorsAnywhere(url)
+        if (process.env.REACT_APP_PROXY) {
+          url = process.env.REACT_APP_PROXY + url
         }
 
         req.open(method, url)
