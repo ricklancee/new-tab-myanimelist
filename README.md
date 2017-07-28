@@ -56,4 +56,4 @@ REACT_APP_ANI_LIST_CLIENT_SECRET=your-ani-list-client-secret
 ```
 **Development**  
 
-Install dependencies and run `npm run start`. The app is served to http://localhost:3000. You propabably want to disable web security temporarily because request to MAL won't work in localhost because of CORS. For mac: `open -a Google\ Chrome --args --disable-web-security --user-data-dir`. 
+Install dependencies `npm install` and run `npm run start`. The app is served to http://localhost:3000. A cors-anywhere server is started on port :8000 to workaround MAL's cors headers for development.
