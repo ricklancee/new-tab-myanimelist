@@ -1,8 +1,9 @@
+const currentlyAiringAnime = require('currently-airing-anime');
+
 import { storage } from './Store'
 import MALjs, { ListResponse } from './Api'
-import AniApi from './AniApi'
 import { User } from '../App'
-import toast from './toast'
+import { Status } from '../components/Show'
 
 export type AiringData = {
   id?: number
@@ -12,12 +13,10 @@ export type AiringData = {
 
 export default class ListFetcher  {
   private malApi: MALjs
-  private aniApi: AniApi
   private airingData: AiringData[] = []
 
   constructor() {
     this.malApi = new MALjs
-    this.aniApi = new AniApi
   }
 
   /**
@@ -73,86 +72,26 @@ export default class ListFetcher  {
    * @param  {ListResponse[]} shows
    * @returns {Promise<airingData[]>}
    */
-  public async getAiringDatesForShows(shows: ListResponse[]): Promise<AiringData[]> {
-    const airing = await this.fetchAiring()
+  public async getAiringDatesForShows(listShows: ListResponse[]): Promise<AiringData[]> {
+    const ids = listShows.filter(show => show.status === Status.watching).map(show => show.series.id);
 
-    if (!airing) {
-      return []
+    let { shows } = await currentlyAiringAnime({
+      malIdIn: ids,
+      season: false,
+      seasonYear: false
+    });
+
+    if (!shows.length) {
+      return [];
     }
 
-    return new Promise(resolve => {
-        const results = airing.reduce((responseArray, airingShow) => {
-          if (!airingShow.airing || !airingShow.airing.time || !airingShow.airing.next_episode) {
-            return responseArray
-          }
+    shows = shows.filter((show:any) => show.nextAiringEpisode);
 
-          const airingTitles = [
-            airingShow.title_english,
-            airingShow.title_japanese,
-            airingShow.title_romaji,
-            ...airingShow.synonyms
-          ].filter(v => v).map(title => this.normalizeTitle(title))
-
-          const index = shows.findIndex((show) => {
-
-            const watchingTitles = [
-              show.series.title,
-              ...show.series.synonyms
-            ].filter(v => v).map(title => this.normalizeTitle(title))
-
-            return !!watchingTitles.find(title => !!airingTitles.find(t => t === title))
-          })
-
-          if (index === -1) {
-            return responseArray
-          }
-
-          responseArray.push({
-            id: shows[index].series.id,
-            airingDate: new Date(airingShow.airing.time),
-            nextEpisode: airingShow.airing.next_episode
-          })
-
-          return responseArray
-        }, [] as AiringData[])
-
-        storage.set('app.airing', results)
-
-        resolve(results)
-    }) as Promise<AiringData[]>
-  }
-
-  /**
-   * Fetch all airing data from AniList
-   */
-  private async fetchAiring()  {
-    try {
-      return await this.aniApi.getCurrentlyAiring()
-    } catch (e) {
-        toast.error(e.message)
-    }
-
-    return null
-  }
-
-  /**
-   * Normalize a show title.
-   *
-   * 'Ao no Exorcist: Kyoto Fujouou-hen' whould become 'Ao no Exorcist Kyoto Fujououhen'
-   * A title show from MAL could be called 'Ao no Exorcist Kyoto Fujouou-hen' without
-   * the : when a show from AniList could have a : therefor we remove all of these characters
-   * to make sure we can find a match.
-   *
-   * @param  {string} title
-   * @returns {string}
-   */
-  private normalizeTitle(title: string): string {
-    return title.replace(/\s+/g, '')
-          .replace('-', '')
-          .replace('_', '')
-          .replace(':', '')
-          .replace(/'|"/, '')
-          .toLowerCase()
+    return shows.map((show: any) => ({
+      id: show.idMal,
+      airingDate: new Date(show.nextAiringEpisode.airingAt * 1000),
+      nextEpisode: show.nextAiringEpisode.episode
+    }));
   }
 
   /**
