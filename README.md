@@ -53,6 +53,7 @@ I am way too lazy to go to myanimelist.net and update anime on my list. This is 
 # .env
 REACT_APP_ANI_LIST_CLIENT_ID=your-ani-list-client-id
 REACT_APP_ANI_LIST_CLIENT_SECRET=your-ani-list-client-secret
+REACT_APP_TITLE=New Tab: MyAnimeList
 ```
 **Development**  
 
