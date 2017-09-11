@@ -20,6 +20,11 @@ interface Props {
   }
   title: string
   image: string
+  startDateFuzzy?: {
+    year: number
+    month: number
+    day: number
+  }
   currentEpisode: number
   totalEpisodeCount: number
   status: Status
@@ -214,8 +219,27 @@ export default class Show extends React.Component<Props, State> {
     return 'Airs ' + dayOfTheWeek + 's (' + airs.from(today, true) + ' left)'
   }
 
+  formatFuzzyAiring() {
+    const fuzzyDate = this.props.startDateFuzzy;
+    if (!fuzzyDate) {
+      return null;
+    }
+
+    if (fuzzyDate.year && fuzzyDate.month && fuzzyDate.day) {
+      const airs = moment(`${fuzzyDate.year}-${fuzzyDate.month}-${fuzzyDate.day}`);
+      return `Airs ${airs.format('dddd, D MMMM')}`
+    }
+
+    if (fuzzyDate.year && fuzzyDate.month) {
+      const airs = moment(`${fuzzyDate.year}-${fuzzyDate.month}-01`);
+      return `Airs in ${airs.format('MMMM')}`
+    }
+
+    return `Airs in ${fuzzyDate.year}`;
+  }
+
   render() {
-    const { title, image, id, airing, seasonalData } = this.props
+    const { title, image, id, airing, seasonalData, startDateFuzzy } = this.props
     const { status, totalEpisodeCount, currentEpisode, showCompleteButton } = this.state
 
     const fullBorder = airing && currentEpisode !== airing.nextEpisode - 1 && this.airedToday()
@@ -242,12 +266,18 @@ export default class Show extends React.Component<Props, State> {
             {`${this.formatRelativeAiringDate(airing.airDate)}`}
           </time>
         )}
+        {(!airing && startDateFuzzy && startDateFuzzy.year) && (
+          <time
+            className="Show__airing"
+          >
+            {`${this.formatFuzzyAiring()}`}
+          </time>
+        )}
         <figure className="Show__image-container">
           <a
             href={
-              !seasonalData
-              ? `https://myanimelist.net/anime/${id}`
-              : `https://myanimelist.net/search/all?q=${encodeURIComponent(this.props.title)}`
+              id ? `https://myanimelist.net/anime/${id}`
+                 : `https://myanimelist.net/search/all?q=${encodeURIComponent(this.props.title)}`
             }
             target="_blank"
             className="Show__link"

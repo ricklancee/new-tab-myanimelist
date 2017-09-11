@@ -1,122 +1,89 @@
 import * as React from 'react'
 import './SeasonList.css'
-import AniApi, { Series } from '../support/AniApi'
 import ScrollContainer from './ScrollContainer'
 import Loading from './Loading'
 import Show from './Show'
-import { get, split, uniqBy } from 'lodash'
-import * as moment from 'moment'
-import toast from '../support/toast'
+import { capitalize } from 'lodash'
+
+const currentlyAiringAnime = require('currently-airing-anime')
 
 interface State {
-  shows: Series[]
+  shows: any[]
   isLoading: boolean
 }
 
-/**
- * Converts the date integer 20170630 from AniList to the date string 2017-06-30
- * so we can use it properly.
- *
- * @param integer
- */
-const crappyDateIntegerToDateString = (integer: number): string => {
-  return split(String(integer), /(\d{4})(\d{2})(\d{2})/i).filter(v => v).join('-')
-}
-
 export default class SeasonList extends React.Component<{}, State> {
-
-  static cachedList: Series [] = []
-
-  private seasonalShows: Series[] = []
-
-  private skip: number = 0
-  private limit: number = 35
-
-  private canCompleteFetch: boolean = true
+  private getNextShows: Function
 
   constructor(props: {}) {
     super(props)
 
-    this.seasonalShows = SeasonList.cachedList
-    const shouldFetchList = this.seasonalShows.length === 0
-
     this.state = {
-      shows: this.seasonalShows.slice(this.skip, this.limit),
-      isLoading: shouldFetchList
+      shows: [],
+      isLoading: true
     }
 
-    if (SeasonList.cachedList.length === 0) {
-      this.fetchListFromNetwork()
-    }
+    this.fetchListFromNetwork()
 
     this.onLoadMore = this.onLoadMore.bind(this)
   }
 
-  fetchListFromNetwork() {
-    const api = new AniApi
+  render() {
+    const { shows, isLoading } = this.state
 
-    // We explicitly check if the access token needs to be refreshed
-    // if not each request will check it in the Promise.all
-    // since they are run in parralel
-    api.refreshAccessTokenIfNeeded().then(_ => {
-      Promise.all([
-        api.getShowsForSeason(this.getCurrentSeason()),
-        api.getCurrentlyAiring()
-      ]).then(([seasonal, airing]) => {
-        const uniqueShows = uniqBy([...seasonal, ...airing], 'id').filter(({start_date_fuzzy}) => {
-          // Filter out old shows; we still want to display shows that are still airing from a
-          // fall 2016 > winter 2017 season change.
-          return new Date(crappyDateIntegerToDateString(start_date_fuzzy as number)).getFullYear() > 2016
-        })
+    return (
+      <div className="SeasonList">
+        {isLoading ? (
+          <Loading noDelay={true} label="Getting season data from AniList..." />
+        ) : (
+          <div>
+            <h2 className="SeasonList__title">{capitalize(this.getCurrentSeason())} season {(new Date).getFullYear()}</h2>
+            <ScrollContainer onLoadMore={this.onLoadMore}>
+              {shows.map(show => {
+                return <li key={show.id}>
+                    <Show
+                      seasonalData={{
+                        genres: show.genres,
+                        type: show.format
+                      }}
+                      title={show.title.romaji}
+                      image={show.coverImage.large}
+                      currentEpisode={0}
+                      totalEpisodeCount={show.episodes}
+                      status={
+                        // If a show already has one episode make the status 'watching/green'
+                        show.nextAiringEpisode ? 1 : 6
+                      }
+                      id={show.idMal}
+                      airing={show.nextAiringEpisode ? {
+                        nextEpisode: show.nextAiringEpisode.episode,
+                        airDate: new Date(show.nextAiringEpisode.airingAt * 1000)
+                      } : undefined}
+                      startDateFuzzy={show.startDate as {year: number, day: number, month: number}}
+                    />
+                  </li>
+              })}
+            </ScrollContainer>
+          </div>
+        )}
+      </div>
+    )
+  }
 
-        const today = moment()
-        this.seasonalShows = uniqueShows
-          .sort((seriesA, seriesB) => {
-            const dateA = get(seriesA, 'airing.time')
-            const dateB = get(seriesB, 'airing.time')
+  private async fetchListFromNetwork() {
+    console.log('fetch from network')
 
-            if (!dateA || !dateB) {
-              return 1
-            }
+    const {shows, next} = await currentlyAiringAnime()
 
-            const daysA = moment(dateA).diff(today, 'days')
-            const daysB = moment(dateB).diff(today, 'days')
-
-            const nextEpisodeA = get(seriesA, 'airing.next_episode')
-            const nextEpisodeB = get(seriesB, 'airing.next_episode')
-
-            if (nextEpisodeA > 1 && daysA === 6 && daysB !== 6) {
-              return -1
-            } else if (nextEpisodeB > 1 && daysB === 6 && daysA !== 6) {
-              return 1
-            }
-
-            return new Date(dateA as string).getTime() - new Date(dateB as string).getTime()
-          })
-
-        SeasonList.cachedList = this.seasonalShows
-
-        if (this.canCompleteFetch) {
-          this.setState({
-            shows: this.seasonalShows.slice(0, this.limit),
-            isLoading: false
-          })
-        }
-      })
-    }).catch(err => {
-      toast.error(err.message)
+    this.setState({
+      shows: shows,
+      isLoading: false
     })
+
+    this.getNextShows = next
   }
 
-  componentDidMount() {
-    this.canCompleteFetch = true
-  }
-
-  componentWillUnmount() {
-    this.canCompleteFetch = false
-  }
-
-  getCurrentSeason() {
+  private getCurrentSeason() {
     const seasons = {
       'winter': [0, 2],
       'spring': [3, 5],
@@ -139,57 +106,21 @@ export default class SeasonList extends React.Component<{}, State> {
     throw new Error(`Month ${currentMonth} does not fall in the season object`)
   }
 
-  onLoadMore(done: () => void) {
-    this.skip = this.skip + this.limit
-
-    if (this.skip >= this.seasonalShows.length) {
+  private async onLoadMore(done: () => void) {
+    if (!this.getNextShows) {
       done()
       return
     }
 
+    const {shows, next} = await this.getNextShows()
+
+    this.getNextShows = next
+
     this.setState({
       shows: [
         ...this.state.shows,
-        ...this.seasonalShows.slice(this.skip, this.limit + this.skip)
+        ...shows
       ]
     }, done)
-  }
-
-  render() {
-    const { shows, isLoading } = this.state
-
-    return (
-      <div className="SeasonList">
-        {isLoading ? (
-          <Loading noDelay={true} label="Getting season data from AniList..." />
-        ) : (
-          <ScrollContainer onLoadMore={this.onLoadMore}>
-            {shows.map(show => {
-              return <li key={show.id}>
-                  <Show
-                    seasonalData={{
-                      genres: show.genres,
-                      type: show.type
-                    }}
-                    title={show.title_romaji}
-                    image={show.image_url_lge}
-                    currentEpisode={0}
-                    totalEpisodeCount={show.total_episodes}
-                    status={
-                      // If a show already has one episode make the status 'watching/green'
-                      show.airing && show.airing.next_episode > 1 ? 1 : 6
-                    }
-                    id={show.id}
-                    airing={show.airing ? {
-                      nextEpisode: show.airing.next_episode,
-                      airDate: new Date(show.airing.time)
-                    } : undefined}
-                  />
-                </li>
-            })}
-          </ScrollContainer>
-        )}
-      </div>
-    )
   }
 }
