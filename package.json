@@ -24,6 +24,7 @@
     "start": "concurrently --kill-others \"node cors.js\" \"REACT_APP_PROXY='http://localhost:8000/' react-scripts-ts start\"",
     "build": "react-scripts-ts build",
     "build-web": "REACT_APP_PROXY='http://localhost:8000/' REACT_APP_TITLE='Weekly.moe' react-scripts-ts build",
+    "build-demo": "REACT_APP_DEMO_MODE=true react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject"
   },
