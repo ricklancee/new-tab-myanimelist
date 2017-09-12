@@ -77,8 +77,7 @@ export default class ListFetcher  {
 
     let { shows } = await currentlyAiringAnime({
       malIdIn: ids,
-      season: false,
-      seasonYear: false
+      isReleasing: true
     });
 
     if (!shows.length) {
