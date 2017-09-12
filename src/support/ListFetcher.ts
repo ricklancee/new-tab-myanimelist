@@ -1,9 +1,9 @@
-const currentlyAiringAnime = require('currently-airing-anime');
 
 import { storage } from './Store'
 import MALjs, { ListResponse } from './Api'
 import { User } from '../App'
 import { Status } from '../components/Show'
+import currentlyAiringAnime from 'currently-airing-anime'
 
 export type AiringData = {
   id?: number
@@ -73,24 +73,24 @@ export default class ListFetcher  {
    * @returns {Promise<airingData[]>}
    */
   public async getAiringDatesForShows(listShows: ListResponse[]): Promise<AiringData[]> {
-    const ids = listShows.filter(show => show.status === Status.watching).map(show => show.series.id);
+    const ids = listShows.filter(show => show.status === Status.watching).map(show => show.series.id)
 
     let { shows } = await currentlyAiringAnime({
       malIdIn: ids,
       isReleasing: true
-    });
+    })
 
     if (!shows.length) {
-      return [];
+      return []
     }
 
-    shows = shows.filter((show:any) => show.nextAiringEpisode);
+    shows = shows.filter((show:any) => show.nextAiringEpisode)
 
     return shows.map((show: any) => ({
       id: show.idMal,
       airingDate: new Date(show.nextAiringEpisode.airingAt * 1000),
       nextEpisode: show.nextAiringEpisode.episode
-    }));
+    }))
   }
 
   /**

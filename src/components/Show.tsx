@@ -220,22 +220,22 @@ export default class Show extends React.Component<Props, State> {
   }
 
   formatFuzzyAiring() {
-    const fuzzyDate = this.props.startDateFuzzy;
+    const fuzzyDate = this.props.startDateFuzzy
     if (!fuzzyDate) {
-      return null;
+      return null
     }
 
     if (fuzzyDate.year && fuzzyDate.month && fuzzyDate.day) {
-      const airs = moment(`${fuzzyDate.year}-${fuzzyDate.month}-${fuzzyDate.day}`);
+      const airs = moment(`${fuzzyDate.year}-${fuzzyDate.month}-${fuzzyDate.day}`)
       return `Airs ${airs.format('dddd, D MMMM')}`
     }
 
     if (fuzzyDate.year && fuzzyDate.month) {
-      const airs = moment(`${fuzzyDate.year}-${fuzzyDate.month}-01`);
+      const airs = moment(`${fuzzyDate.year}-${fuzzyDate.month}-01`)
       return `Airs in ${airs.format('MMMM')}`
     }
 
-    return `Airs in ${fuzzyDate.year}`;
+    return `Airs in ${fuzzyDate.year}`
   }
 
   render() {

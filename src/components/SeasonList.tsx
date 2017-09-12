@@ -4,8 +4,7 @@ import ScrollContainer from './ScrollContainer'
 import Loading from './Loading'
 import Show from './Show'
 import { capitalize } from 'lodash'
-
-const currentlyAiringAnime = require('currently-airing-anime')
+import currentlyAiringAnime from 'currently-airing-anime'
 
 interface State {
   shows: any[]
@@ -71,7 +70,6 @@ export default class SeasonList extends React.Component<{}, State> {
   }
 
   private async fetchListFromNetwork() {
-    console.log('fetch from network')
 
     const {shows, next} = await currentlyAiringAnime()
 
