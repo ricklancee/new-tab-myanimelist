@@ -277,8 +277,7 @@ export default class Show extends React.Component<Props, State> {
           <a
             href={
               id ? `https://myanimelist.net/anime/${id}`
-                 : `https://myanimelist.net/search/all?q=${encodeURIComponent(this.props.title)}`
-            }
+                 : `https://myanimelist.net/search/all?q=${encodeURIComponent(this.props.title)}`}
             target="_blank"
             className="Show__link"
           >

@@ -10,7 +10,7 @@
     "@types/node": "^8.0.8",
     "@types/react": "^15.0.35",
     "@types/react-dom": "^15.5.1",
-    "currently-airing-anime": "^0.4.3",
+    "currently-airing-anime": "^0.6.2",
     "electron": "^1.6.11",
     "electron-builder": "^19.16.0",
     "fuse.js": "^3.0.5",

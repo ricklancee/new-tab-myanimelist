@@ -9,3 +9,25 @@
   font-size: 14px;
 }
 
+.SeasonList__controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: -0.5em;
+}
+
+.SeasonList__controls button {
+  background: #efefef;
+  padding: 0.25em 0.5em;
+  font-size: 12px;
+  text-decoration: none;
+  border: 0;
+}
+
+.SeasonList__title {
+  text-align: center;
+  margin-bottom: -10px;
+  font-size: 1em;
+  font-weight: normal;
+  flex: 1;
+}
