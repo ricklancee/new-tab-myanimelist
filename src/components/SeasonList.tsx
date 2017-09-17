@@ -9,10 +9,13 @@ import currentlyAiringAnime from 'currently-airing-anime'
 type Season = 'WINTER'|'SPRING'|'SUMMER'|'FALL'
 
 interface State {
+  // tslint:disable-next-line:no-any
   shows: any[]
   isLoading: boolean
   seasonYear: number
   season: Season
+  canShowNextSeason: boolean
+  canShowPreviousSeason: boolean
 }
 
 const seasons = {
@@ -32,7 +35,9 @@ export default class SeasonList extends React.Component<{}, State> {
       shows: [],
       isLoading: true,
       seasonYear: (new Date()).getFullYear(),
-      season: this.getCurrentSeason()
+      season: this.getCurrentSeason(),
+      canShowNextSeason: true,
+      canShowPreviousSeason: true
     }
 
     this.fetchListFromNetwork()
@@ -41,7 +46,7 @@ export default class SeasonList extends React.Component<{}, State> {
   }
 
   render() {
-    const { shows, isLoading } = this.state
+    const { shows, canShowNextSeason, canShowPreviousSeason,  isLoading } = this.state
 
     return (
       <div className="SeasonList">
@@ -50,7 +55,8 @@ export default class SeasonList extends React.Component<{}, State> {
         ) : (
           <div>
             <div className="SeasonList__controls">
-              <button onClick={this.goToPreviousSeason}>&larr; {capitalize(this.getPreviousSeason())}</button>
+              {canShowPreviousSeason &&
+                <button onClick={this.goToPreviousSeason}>&larr; {capitalize(this.getPreviousSeason())}</button>}
               <h2 className="SeasonList__title">
                 {capitalize(this.state.season)} season
                 {' '}
@@ -60,7 +66,8 @@ export default class SeasonList extends React.Component<{}, State> {
                     : this.state.seasonYear
                 }
               </h2>
-              <button onClick={this.goToNextSeason}>{capitalize(this.getNextSeason())} &rarr;</button>
+              {canShowNextSeason
+                 && <button onClick={this.goToNextSeason}>{capitalize(this.getNextSeason())} &rarr;</button>}
             </div>
             <ScrollContainer onLoadMore={this.onLoadMore}>
               {shows.map(show => {
@@ -101,14 +108,23 @@ export default class SeasonList extends React.Component<{}, State> {
 
     const nextSeason = this.getNextSeason()
     let nextSeasonYear = this.state.seasonYear
+    let canShowNextSeason = true
 
     if (nextSeason.toLowerCase() === 'winter') {
       nextSeasonYear = nextSeasonYear + 1
     }
 
+    const reachedNextYear = nextSeasonYear === (new Date()).getFullYear() + 1 &&
+                            nextSeason.toLowerCase() === this.getCurrentSeason()
+
+    if (reachedNextYear) {
+      canShowNextSeason = false
+    }
+
     this.setState({
       season: nextSeason,
-      seasonYear: nextSeasonYear
+      seasonYear: nextSeasonYear,
+      canShowNextSeason: canShowNextSeason
     }, () => {
       this.fetchListFromNetwork()
     })
@@ -120,15 +136,24 @@ export default class SeasonList extends React.Component<{}, State> {
     }
 
     const previousSeason = this.getPreviousSeason()
-    let nextSeasonYear = this.state.seasonYear
+    let previousSeasonYear = this.state.seasonYear
+    let canShowPreviousSeason = true
 
     if (previousSeason.toLowerCase() === 'fall') {
-      nextSeasonYear = nextSeasonYear - 1
+      previousSeasonYear = previousSeasonYear - 1
+    }
+
+    const reachedPreviousYear = previousSeasonYear === (new Date()).getFullYear() - 1 &&
+      previousSeason.toLowerCase() === this.getCurrentSeason()
+
+    if (reachedPreviousYear) {
+      canShowPreviousSeason = false
     }
 
     this.setState({
       season: previousSeason,
-      seasonYear: nextSeasonYear
+      seasonYear: previousSeasonYear,
+      canShowPreviousSeason: canShowPreviousSeason
     }, () => {
       this.fetchListFromNetwork()
     })
